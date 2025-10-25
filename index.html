@@ -484,6 +484,10 @@
             <div class="nav-icon">🎮</div>
             <span>Juegos</span>
         </a>
+        <a href="https://zero4michilearn.onrender.com/" class="nav-item">
+            <div class="nav-icon">👩‍🎓</div>
+            <span>Aprende</span>
+        </a>
         <a href="#" class="nav-item">
             <div class="nav-icon">🖼️</div>
             <span>Galería</span>
@@ -616,6 +620,12 @@
                         <div class="activity-title">Zona de Juegos</div>
                         <div class="activity-description">Juega con Chispa y Tigreto en aventuras increíbles</div>
                     </div>
+
+                    <div class="activity-item" onclick="visita('learn')">
+                        <div class="activity-icon">👩‍🎓</div>
+                        <div class="activity-title">Zona de Idiomas</div>
+                        <div class="activity-description">Aprende Idiomas</div>
+                    </div>
                     
                     <div class="activity-item" onclick="goToActivity('galeria')">
                         <div class="activity-icon">🖼️</div>
@@ -682,6 +692,8 @@ function visitCharacter(character) {
 function visita(character) {
     if (character.toLowerCase() === "juegos") {
         window.location.href = "./juegos/001/index.html";
+    } else if (character.toLowerCase() === "learn") {
+        window.location.href = "https://zero4michilearn.onrender.com/"; // Cambia la ruta según tu estructura de directorios
     } else {
         alert(`¡Visitando la página de ${character.charAt(0).toUpperCase() + character.slice(1)}! 🐱✨`);
         //window.location.href = `${character.toLowerCase()}.html`; // Redirige a la página del personaje ingresado
