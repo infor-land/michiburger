@@ -1,0 +1,765 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MichiBurger 🐱🍔 - El mundo mágico de los gatitos naranjas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #FFE4B5, #FFDAB9, #FFB366);
+            min-height: 100vh;
+            color: #8B4513;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(45deg, #FF8C00, #FFA500);
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(255, 140, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "🐾";
+            position: absolute;
+            font-size: 80px;
+            left: -20px;
+            top: -10px;
+            opacity: 0.2;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .header::after {
+            content: "🐾";
+            position: absolute;
+            font-size: 80px;
+            right: -20px;
+            top: -10px;
+            opacity: 0.2;
+            animation: float 3s ease-in-out infinite reverse;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 3.5em;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            margin: 0;
+        }
+
+        .header p {
+            color: #FFF8DC;
+            font-size: 1.3em;
+            margin-top: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Navigation Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #FF8C00, #FFA500, #FFB366);
+            padding-top: 120px;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            z-index: 100;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .menu-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            background: #FF6347;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            z-index: 200;
+            box-shadow: 0 4px 15px rgba(255, 99, 71, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            background: #FF4500;
+            transform: scale(1.1);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-size: 1.1em;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.2);
+            border-left-color: white;
+            transform: translateX(10px);
+        }
+
+        .nav-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 0;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 4px solid #FFB366;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-section::before {
+            content: "✨";
+            position: absolute;
+            font-size: 40px;
+            top: 20px;
+            right: 30px;
+            animation: sparkle 2s infinite;
+        }
+
+        .welcome-section h2 {
+            color: #FF6347;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .welcome-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #654321;
+            text-align: justify;
+            margin-bottom: 25px;
+        }
+
+        /* Characters Grid */
+        .characters-section {
+            margin: 40px 0;
+        }
+
+        .characters-section h2 {
+            text-align: center;
+            color: #FF6347;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .character-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 3px solid #FFB366;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            border-color: #FF6347;
+        }
+
+        .character-card::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+            opacity: 0;
+        }
+
+        .character-card:hover::before {
+            animation: shine 0.6s ease;
+        }
+
+        .character-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #FF8C00, #FFA500);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .character-card:hover .character-avatar {
+            transform: scale(1.1) rotate(10deg);
+        }
+
+        .character-name {
+            font-size: 1.8em;
+            color: #FF6347;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .character-birthday {
+            color: #FF69B4;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .character-description {
+            color: #654321;
+            font-size: 0.95em;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .character-likes {
+            background: #FFF8DC;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: #8B4513;
+            margin-bottom: 15px;
+        }
+
+        .visit-btn {
+            background: linear-gradient(45deg, #FF7675, #E84393);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.3);
+        }
+
+        .visit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 118, 117, 0.4);
+        }
+
+        /* Activities Section */
+        .activities-section {
+            background: linear-gradient(135deg, #FFEAA7, #FDCB6E);
+            border-radius: 25px;
+            padding: 40px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .activities-section h2 {
+            color: #D63031;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .activity-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .activity-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .activity-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .activity-title {
+            font-size: 1.2em;
+            color: #FF6347;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .activity-description {
+            color: #654321;
+            font-size: 0.9em;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            margin-top: 50px;
+        }
+
+        .footer p {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .footer-icons {
+            font-size: 30px;
+            margin: 15px 0;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1) rotate(180deg); }
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .characters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 10px;
+            }
+            
+            .welcome-section, .activities-section {
+                padding: 25px;
+            }
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Toggle Button -->
+    <button class="menu-toggle" onclick="toggleMenu()">🍔</button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <a href="#" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <span>Inicio</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon">🐱</div>
+            <span>Personajes</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon">🛒</div>
+            <span>Tienda</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon">📖</div>
+            <span>Blog de Canela</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon">🎮</div>
+            <span>Juegos</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon">🖼️</div>
+            <span>Galería</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon">💌</div>
+            <span>Contacto</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon">🧺</div>
+            <span>Adopciones</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon">⚙️</div>
+            <span>Configuración</span>
+        </a>
+    </nav>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">
+               <img src="michi100x82.png" alt="Logo MichiBurger">
+            </div>
+            <div>
+                <h1>MichiBurger</h1>
+                <p>El mundo mágico de los gatitos naranjas</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <h2>🐾 Bienvenidas a MichiBurger</h2>
+                <div class="welcome-text">
+                    <p>MichiBurger nació en una soleada mañana de primavera, cuando una niña llamada Luna soñó con un lugar mágico lleno de gatitos naranjas que cocinaban mini hamburguesas, contaban cuentos y jugaban sin parar. Así nació este rincón adorable del internet, donde cada gatito tiene su historia, su estilo, y su forma especial de robar corazones.</p>
+                    
+                    <p>En nuestro mundo gatuno encontrarás aventuras increíbles, juegos divertidos, cuentos mágicos y, por supuesto, a los gatitos más adorables que jamás hayas conocido. Cada uno tiene su personalidad única y está esperando conocerte.</p>
+                </div>
+            </section>
+
+            <!-- Characters Section -->
+            <section class="characters-section">
+                <h2>🧡 Conoce a nuestros adorables personajes</h2>
+                
+                <div class="characters-grid">
+                    <!-- Chispa -->
+                    <div class="character-card" onclick="visitCharacter('chispa')">
+                        <div class="character-avatar">🐱</div>
+                        <div class="character-name">Chispa ✨</div>
+                        <div class="character-birthday">🎂 14 de febrero</div>
+                        <div class="character-description">
+                            Curioso, inquieto y siempre tiene una idea nueva. Gato naranja claro con una orejita manchada de blanco y ojos ámbar brillantes.
+                        </div>
+                        <div class="character-likes">
+                            💖 Le encanta: Jugar videojuegos retro y esconderse en cajas de cartón
+                        </div>
+                        <button class="visit-btn">Visitar a Chispa</button>
+                    </div>
+
+                    <!-- Canela -->
+                    <div class="character-card" onclick="visitCharacter('canela')">
+                        <div class="character-avatar">😽</div>
+                        <div class="character-name">Canela 🍯</div>
+                        <div class="character-birthday">🎂 21 de septiembre</div>
+                        <div class="character-description">
+                            Dulce, organizada y muy maternal. Pelaje naranja oscuro con patitas blancas y un moñito rosa en la oreja.
+                        </div>
+                        <div class="character-likes">
+                            💖 Le encanta: Hornear galletas de sardina y escribir cuentos mágicos
+                        </div>
+                        <button class="visit-btn">Visitar a Canela</button>
+                    </div>
+
+                    <!-- Tigreto -->
+                    <div class="character-card" onclick="visitCharacter('tigreto')">
+                        <div class="character-avatar">😼</div>
+                        <div class="character-name">Tigreto 🦁</div>
+                        <div class="character-birthday">🎂 2 de agosto</div>
+                        <div class="character-description">
+                            Valiente, protector y algo travieso. Rayas como tigre bebé, ojos verdes y siempre lleva una mini capa azul.
+                        </div>
+                        <div class="character-likes">
+                            💖 Le encanta: El fútbol gatuno y cazar pompones que ruedan
+                        </div>
+                        <button class="visit-btn">Visitar a Tigreto</button>
+                    </div>
+
+                    <!-- Mecha -->
+                    <div class="character-card" onclick="visitCharacter('mecha')">
+                        <div class="character-avatar">😹</div>
+                        <div class="character-name">Mecha 🔧</div>
+                        <div class="character-birthday">🎂 9 de noviembre</div>
+                        <div class="character-description">
+                            Genio loco, creativo e inventor. Gato naranja con lentes grandes, pelito despeinado y una cola que se mueve como resorte.
+                        </div>
+                        <div class="character-likes">
+                            💖 Le encanta: Construir robots y mezclar sabores raros en la cocina
+                        </div>
+                        <button class="visit-btn">Visitar a Mecha</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Activities Section -->
+            <section class="activities-section">
+                <h2>🎀 ¿Qué puedes hacer en MichiBurger?</h2>
+                
+                <div class="activities-grid">
+                    <div class="activity-item" onclick="goToActivity('tienda')">
+                        <div class="activity-icon">🛒</div>
+                        <div class="activity-title">Tienda Gatuna</div>
+                        <div class="activity-description">Compra accesorios adorables para tus gatitos favoritos</div>
+                    </div>
+                    
+                    <div class="activity-item" onclick="goToActivity('blog')">
+                        <div class="activity-icon">📖</div>
+                        <div class="activity-title">Cuentos de Canela</div>
+                        <div class="activity-description">Lee las historias mágicas escritas por nuestra gatita escritora</div>
+                    </div>
+                    
+                    <div class="activity-item" onclick="visita('juegos')">
+                        <div class="activity-icon">🎮</div>
+                        <div class="activity-title">Zona de Juegos</div>
+                        <div class="activity-description">Juega con Chispa y Tigreto en aventuras increíbles</div>
+                    </div>
+                    
+                    <div class="activity-item" onclick="goToActivity('galeria')">
+                        <div class="activity-icon">🖼️</div>
+                        <div class="activity-title">Galería Michi</div>
+                        <div class="activity-description">Mira las fotos más lindas de nuestros gatitos</div>
+                    </div>
+                    
+                    <div class="activity-item" onclick="goToActivity('contacto')">
+                        <div class="activity-icon">💌</div>
+                        <div class="activity-title">Cartas Mágicas</div>
+                        <div class="activity-description">Envía mensajes a tus gatitos favoritos</div>
+                    </div>
+                    
+                    <div class="activity-item" onclick="goToActivity('adopcion')">
+                        <div class="activity-icon">🧺</div>
+                        <div class="activity-title">Adopción Virtual</div>
+                        <div class="activity-description">¡Muy pronto podrás adoptar tu propio gatito virtual!</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-icons">🐾 ✨ 🧡 ✨ 🐾</div>
+        <p>Hecho con mucho amor para todas las niñas y niños que aman a los gatitos</p>
+        <p>© 2025 MichiBurger - Donde los sueños gatunos se hacen realidad</p>
+    </footer>
+
+    <script>
+        // Menu functionality
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        function closeMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        // Character navigation
+        function visitCharacter_old(character) {
+            alert(`¡Visitando la página de ${character.charAt(0).toUpperCase() + character.slice(1)}! 🐱✨`);
+            // En una aplicación real, esto navegaría a la página del personaje
+        }
+
+function visitCharacter(character) {
+    if (character.toLowerCase() === "chispa") {
+        window.location.href = "chispa_page.html";
+    } else {
+        alert(`¡Visitando la página de ${character.charAt(0).toUpperCase() + character.slice(1)}! 🐱✨`);
+        //window.location.href = `${character.toLowerCase()}.html`; // Redirige a la página del personaje ingresado
+    }
+}
+
+function visita(character) {
+    if (character.toLowerCase() === "juegos") {
+        window.location.href = "./juegos/001/index.html";
+    } else {
+        alert(`¡Visitando la página de ${character.charAt(0).toUpperCase() + character.slice(1)}! 🐱✨`);
+        //window.location.href = `${character.toLowerCase()}.html`; // Redirige a la página del personaje ingresado
+    }
+}
+
+
+
+        // Activity navigation
+        function goToActivity(activity) {
+            const activities = {
+                'tienda': '🛒 ¡Bienvenida a la tienda gatuna! Aquí encontrarás los mejores accesorios.',
+                'blog': '📖 Los cuentos mágicos de Canela te están esperando.',
+                'juegos': '🎮 ¡Hora de jugar! Chispa y Tigreto tienen juegos increíbles.',
+                'galeria': '🖼️ Las fotos más adorables de nuestros gatitos naranjas.',
+                'contacto': '💌 Escribe una carta mágica a tus gatitos favoritos.',
+                'adopcion': '🧺 ¡Muy pronto! La adopción virtual estará disponible.'
+            };
+            
+            alert(activities[activity] || '¡Próximamente disponible!');
+        }
+
+        // Entrance animations
+        window.addEventListener('load', () => {
+            const sections = document.querySelectorAll('.welcome-section, .characters-section, .activities-section');
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    section.style.transition = 'all 0.8s ease';
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, index * 300 + 500);
+            });
+
+            // Character cards animation
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.character-card');
+                cards.forEach((card, index) => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.6s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, index * 150);
+                });
+            }, 1000);
+        });
+
+        // Fun random floating elements
+        function createFloatingElement() {
+            const elements = ['🐾', '✨', '🧡', '💖'];
+            const element = document.createElement('div');
+            element.innerHTML = elements[Math.floor(Math.random() * elements.length)];
+            element.style.position = 'fixed';
+            element.style.fontSize = '20px';
+            element.style.left = Math.random() * window.innerWidth + 'px';
+            element.style.top = window.innerHeight + 'px';
+            element.style.pointerEvents = 'none';
+            element.style.zIndex = '1';
+            element.style.opacity = '0.7';
+            
+            document.body.appendChild(element);
+            
+            const animation = element.animate([
+                { transform: 'translateY(0px)', opacity: 0.7 },
+                { transform: 'translateY(-' + (window.innerHeight + 100) + 'px)', opacity: 0 }
+            ], {
+                duration: 8000,
+                easing: 'linear'
+            });
+            
+            animation.onfinish = () => element.remove();
+        }
+
+        // Create floating elements occasionally
+        setInterval(createFloatingElement, 3000);
+    </script>
+</body>
+</html>
