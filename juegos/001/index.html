@@ -2,13 +2,347 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Enemigo que Persigue</title>
   <style>
-    canvas { background: white; display: block; margin: auto; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    body {
+      background: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    #gameContainer {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      background: white;
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 800px;
+      border: 2px solid #333;
+      transition: background-color 0.3s;
+    }
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 1000;
+    }
+    #joystick {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 3px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      touch-action: none;
+    }
+    #stick {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 20, 147, 0.8);
+      border: 3px solid rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.1s ease;
+      pointer-events: none;
+    }
+    #info {
+      color: white;
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      width: 100%;
+      max-width: 800px;
+    }
+    #gameOverButtons {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      margin-top: 20px;
+    }
+    #gameOverButtons button {
+      background: #ff1493;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    #gameOverButtons button:hover {
+      background: #ff4fbf;
+    }
+    @media (max-width: 768px) {
+      #controls {
+        display: flex;
+      }
+      canvas {
+        height: 60vh;
+        width: auto;
+        max-height: 600px;
+      }
+    }
+	.hidden {
+  display: none !important;
+}
+
   </style>
 </head>
 <body>
-  <canvas id="juego" width="800" height="600"></canvas>
-  <script src="juego.js"></script>
+  <div id="gameContainer">
+    <div id="info">
+      <span id="statsText">Usa las flechas del teclado o el joystick para moverte</span>
+    </div>
+    <canvas id="juego" width="800" height="600"></canvas>
+    <div id="gameOverButtons">
+      <button id="restartBtn">🔁 Reiniciar partida</button>
+      <button id="backBtn">⬅️ Volver atrás</button>
+      <button id="shareBtn">📤 Compartir puntuación</button>
+    </div>
+  </div>
+  
+  <div id="controls">
+    <div id="joystick">
+      <div id="stick"></div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("juego");
+    const ctx = canvas.getContext("2d");
+	const controls = document.getElementById("controls");
+    const joystick = document.getElementById("joystick");
+    const stick = document.getElementById("stick");
+    const statsText = document.getElementById("statsText");
+    const gameOverButtons = document.getElementById("gameOverButtons");
+
+    // Botones finales
+    const restartBtn = document.getElementById("restartBtn");
+    const backBtn = document.getElementById("backBtn");
+    const shareBtn = document.getElementById("shareBtn");
+
+    restartBtn.onclick = () => location.reload();
+    backBtn.onclick = () => history.back();
+    shareBtn.onclick = () => {
+      const mensaje = `He conseguido ${colisiones} puntos en el juego "Enemigo que Persigue"! 😺🔥`;
+      const url = encodeURIComponent(window.location.href);
+      const texto = encodeURIComponent(mensaje);
+      const whatsapp = `https://wa.me/?text=${texto}%20${url}`;
+      const mail = `mailto:?subject=Mi puntuación en Enemigo que Persigue&body=${texto}%20${url}`;
+      if (confirm("¿Quieres compartir por WhatsApp? (Cancelar = correo)")) {
+        window.open(whatsapp, "_blank");
+      } else {
+        window.location.href = mail;
+      }
+    };
+
+    function resizeCanvas() {
+      const container = document.getElementById("gameContainer");
+      const maxWidth = Math.min(window.innerWidth - 20, 800);
+      const maxHeight = Math.min(window.innerHeight * 0.6, 600);
+      const scale = Math.min(maxWidth / 800, maxHeight / 600);
+      canvas.style.width = (800 * scale) + 'px';
+      canvas.style.height = (600 * scale) + 'px';
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let jugador = { x: 400, y: 300, w: 50, h: 50, color: "#FF1493", vx: 0, vy: 0 };
+    let objetivo = generarObjetivo();
+    let enemigo = { x: Math.random()*800, y: Math.random()*600, r: 25, color: "red", velocidad: 0.5 };
+    let colisiones = 0;
+    let vidas = 3;
+    let golpesRecibidos = 0;
+    let golpesParaPerderVida = 5;
+    let ultimoGolpe = Date.now();
+    let teclas = {};
+
+    // Controles
+    document.addEventListener("keydown", e => {
+      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+      teclas[e.key] = true;
+    });
+    document.addEventListener("keyup", e => teclas[e.key] = false);
+
+    let joystickActive = false;
+    let joystickCenter = { x: 0, y: 0 };
+    let joystickVector = { x: 0, y: 0 };
+
+    function initJoystick(e) {
+	controls.classList.remove("hidden");
+
+      joystickActive = true;
+      const rect = joystick.getBoundingClientRect();
+      joystickCenter.x = rect.left + rect.width / 2;
+      joystickCenter.y = rect.top + rect.height / 2;
+      updateJoystick(e);
+    }
+
+    function updateJoystick(e) {
+      if (!joystickActive) return;
+      const touch = e.touches ? e.touches[0] : e;
+      let dx = touch.clientX - joystickCenter.x;
+      let dy = touch.clientY - joystickCenter.y;
+      const distance = Math.hypot(dx, dy);
+      const maxDistance = 45;
+      if (distance > maxDistance) {
+        dx = (dx / distance) * maxDistance;
+        dy = (dy / distance) * maxDistance;
+      }
+      joystickVector.x = dx / maxDistance;
+      joystickVector.y = dy / maxDistance;
+      stick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    }
+
+    function endJoystick() {
+      joystickActive = false;
+      joystickVector = { x: 0, y: 0 };
+      stick.style.transform = 'translate(-50%, -50%)';
+    }
+
+    joystick.addEventListener('touchstart', initJoystick, { passive: false });
+    joystick.addEventListener('touchmove', updateJoystick, { passive: false });
+    joystick.addEventListener('touchend', endJoystick);
+    joystick.addEventListener('mousedown', initJoystick);
+    document.addEventListener('mousemove', updateJoystick);
+    document.addEventListener('mouseup', endJoystick);
+
+    function generarObjetivo() {
+      return {
+        x: Math.random() * (canvas.width - 50),
+        y: Math.random() * (canvas.height - 50),
+        w: 50,
+        h: 50,
+        color: `rgb(${rand()},${rand()},${rand()})`
+      };
+    }
+
+    function rand() {
+      return Math.floor(Math.random() * 205 + 50);
+    }
+
+    function moverJugador() {
+      const velocidad = 3;
+      if (teclas["ArrowLeft"] && jugador.x > 0) jugador.x -= velocidad;
+      if (teclas["ArrowRight"] && jugador.x + jugador.w < canvas.width) jugador.x += velocidad;
+      if (teclas["ArrowUp"] && jugador.y > 0) jugador.y -= velocidad;
+      if (teclas["ArrowDown"] && jugador.y + jugador.h < canvas.height) jugador.y += velocidad;
+      if (joystickActive) {
+        jugador.x += joystickVector.x * velocidad;
+        jugador.y += joystickVector.y * velocidad;
+      }
+      jugador.x = Math.max(0, Math.min(canvas.width - jugador.w, jugador.x));
+      jugador.y = Math.max(0, Math.min(canvas.height - jugador.h, jugador.y));
+    }
+
+    function moverEnemigo() {
+      let dx = jugador.x + jugador.w/2 - enemigo.x;
+      let dy = jugador.y + jugador.h/2 - enemigo.y;
+      let dist = Math.hypot(dx, dy);
+      enemigo.x += (dx / dist) * enemigo.velocidad;
+      enemigo.y += (dy / dist) * enemigo.velocidad;
+    }
+
+    function detectarColisiones() {
+      let ahora = Date.now();
+      // Jugador vs Objetivo
+      if (jugador.x < objetivo.x + objetivo.w &&
+          jugador.x + jugador.w > objetivo.x &&
+          jugador.y < objetivo.y + objetivo.h &&
+          jugador.y + jugador.h > objetivo.y) {
+        colisiones++;
+        enemigo.velocidad += 0.1;
+        canvas.style.backgroundColor = objetivo.color;
+        objetivo = generarObjetivo();
+      }
+      // Jugador vs Enemigo
+      let dx = jugador.x + jugador.w/2 - enemigo.x;
+      let dy = jugador.y + jugador.h/2 - enemigo.y;
+      let dist = Math.hypot(dx, dy);
+      if (dist < enemigo.r + jugador.w/2 && ahora - ultimoGolpe > 1500) {
+        golpesRecibidos++;
+        ultimoGolpe = ahora;
+        if (golpesRecibidos >= golpesParaPerderVida) {
+          vidas--;
+          golpesRecibidos = 0;
+        }
+      }
+    }
+
+    function dibujar() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = jugador.color;
+      ctx.fillRect(jugador.x, jugador.y, jugador.w, jugador.h);
+      ctx.fillStyle = objetivo.color;
+      ctx.fillRect(objetivo.x, objetivo.y, objetivo.w, objetivo.h);
+      ctx.fillStyle = enemigo.color;
+      ctx.beginPath();
+      ctx.arc(enemigo.x, enemigo.y, enemigo.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "black";
+      ctx.font = "24px Arial";
+      ctx.fillText(`❤️ ${vidas}`, 10, 30);
+      ctx.fillText(`⭐ ${colisiones}`, 10, 60);
+      ctx.fillText(`💥 ${golpesRecibidos}/5`, 10, 90);
+      statsText.textContent = `Vidas: ${vidas} | Puntos: ${colisiones} | Golpes: ${golpesRecibidos}/5`;
+
+      if (vidas <= 0) {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "red";
+        ctx.font = "60px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", canvas.width/2, canvas.height/2 - 40);
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText(`Puntuación: ${colisiones}`, canvas.width/2, canvas.height/2 + 20);
+        
+		gameOverButtons.style.display = "flex";
+controls.classList.add("hidden");
+
+      }
+    }
+
+    function loop() {
+      if (vidas > 0) {
+        moverJugador();
+        moverEnemigo();
+        detectarColisiones();
+      }
+      dibujar();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
 </body>
 </html>
