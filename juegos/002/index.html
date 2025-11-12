@@ -24,7 +24,7 @@
         .container {
             background: white;
             border-radius: 20px;
-            padding: 40px;
+            padding: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             max-width: 500px;
             width: 100%;
@@ -33,21 +33,21 @@
 
         h1 {
             color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2em;
+            margin-bottom: 8px;
+            font-size: 1.5em;
         }
 
         .score {
-            font-size: 1.5em;
+            font-size: 1.1em;
             color: #333;
-            margin-bottom: 2px;
+            margin-bottom: 5px;
             font-weight: bold;
         }
 
         .timer {
-            font-size: 3em;
+            font-size: 2em;
             color: #ff6b6b;
-            margin-bottom: 2px;
+            margin-bottom: 5px;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
@@ -63,57 +63,31 @@
         }
 
         .question {
-            font-size: 3em;
+            font-size: 2em;
             color: #333;
-            margin: 10px 0;
+            margin: 8px 0;
             font-weight: bold;
         }
 
-        .input-group {
-            margin: 30px 0;
-        }
-
-        input[type="number"] {
+        .display {
             font-size: 2em;
             padding: 15px;
-            width: 150px;
+            background: #f8f9fa;
             border: 3px solid #667eea;
             border-radius: 10px;
-            text-align: center;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        input[type="number"]:focus {
-            border-color: #764ba2;
-            box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
-        }
-
-        button {
-            font-size: 1.2em;
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin: 10px;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #333;
         }
 
         .feedback {
-            font-size: 1.4em;
-            margin: 20px 0;
-            min-height: 40px;
+            font-size: 1em;
+            margin: 10px 0;
+            min-height: 30px;
             font-weight: bold;
         }
 
@@ -125,59 +99,19 @@
             color: #ff6b6b;
         }
 
-        .stats {
-            margin-top: 30px;
-            display: flex;
-            justify-content: space-around;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 0.8em;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            color: #333;
-            font-size: 1.4em;
-            font-weight: bold;
-        }
-
-        .display {
-            font-size: 2.5em;
-            padding: 20px;
-            background: #f8f9fa;
-            border: 3px solid #667eea;
-            border-radius: 10px;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-
         .keyboard {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
+            gap: 8px;
+            margin: 15px 0;
             max-width: 300px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .key {
-            font-size: 1.8em;
-            padding: 20px;
+            font-size: 1.5em;
+            padding: 15px;
             background: white;
             border: 2px solid #667eea;
             border-radius: 10px;
@@ -185,6 +119,8 @@
             transition: all 0.2s;
             font-weight: bold;
             color: #333;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .key:active {
@@ -209,20 +145,196 @@
 
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
-            margin-top: 20px;
+            margin: 15px 0;
         }
 
         .action-buttons button {
             flex: 1;
-            max-width: 200px;
+            max-width: 180px;
+            font-size: 1em;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .action-buttons button:active {
+            transform: scale(0.95);
+        }
+
+        .stats {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.75em;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            color: #333;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        /* Media queries para móviles pequeños */
+        @media (max-height: 700px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.3em;
+                margin-bottom: 5px;
+            }
+
+            .score {
+                font-size: 1em;
+                margin-bottom: 3px;
+            }
+
+            .timer {
+                font-size: 1.8em;
+                margin-bottom: 3px;
+            }
+
+            .question {
+                font-size: 1.8em;
+                margin: 5px 0;
+            }
+
+            .display {
+                font-size: 1.8em;
+                padding: 12px;
+                min-height: 50px;
+                margin-bottom: 10px;
+            }
+
+            .feedback {
+                font-size: 0.9em;
+                margin: 8px 0;
+                min-height: 25px;
+            }
+
+            .keyboard {
+                gap: 6px;
+                margin: 10px 0;
+            }
+
+            .key {
+                font-size: 1.3em;
+                padding: 12px;
+            }
+
+            .action-buttons {
+                margin: 10px 0;
+                gap: 6px;
+            }
+
+            .action-buttons button {
+                font-size: 0.9em;
+                padding: 10px 15px;
+            }
+
+            .stats {
+                padding: 10px;
+                margin-top: 10px;
+            }
+
+            .stat-label {
+                font-size: 0.7em;
+            }
+
+            .stat-value {
+                font-size: 1em;
+            }
+        }
+
+        /* Media queries para móviles muy pequeños */
+        @media (max-height: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.1em;
+                margin-bottom: 3px;
+            }
+
+            .score {
+                font-size: 0.9em;
+                margin-bottom: 2px;
+            }
+
+            .timer {
+                font-size: 1.5em;
+                margin-bottom: 2px;
+            }
+
+            .question {
+                font-size: 1.5em;
+                margin: 3px 0;
+            }
+
+            .display {
+                font-size: 1.5em;
+                padding: 10px;
+                min-height: 45px;
+                margin-bottom: 8px;
+            }
+
+            .feedback {
+                font-size: 0.85em;
+                margin: 5px 0;
+                min-height: 20px;
+            }
+
+            .keyboard {
+                gap: 5px;
+                margin: 8px 0;
+            }
+
+            .key {
+                font-size: 1.2em;
+                padding: 10px;
+            }
+
+            .action-buttons {
+                margin: 8px 0;
+            }
+
+            .action-buttons button {
+                font-size: 0.85em;
+                padding: 8px 12px;
+            }
+
+            .stats {
+                padding: 8px;
+                margin-top: 8px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎓 MichiTablas de Multiplicar</h1>
+        <h1>🎓 Tablas de Multiplicar</h1>
         
         <div class="score">Puntos: <span id="score">0</span></div>
         <div class="timer" id="timer">10</div>
@@ -251,8 +363,6 @@
             <button onclick="checkAnswer()">Comprobar</button>
             <button onclick="checkAnswer()">Siguiente</button>
         </div>
-        
-        
         
         <div class="stats">
             <div class="stat-item">
@@ -335,13 +445,10 @@
         }
 
         function timeUp() {
-		
-            //score = Math.max(0, score - 2);
             incorrectCount++;
             updateDisplay();
             document.getElementById('feedback').textContent = '⏰ ¡Tiempo agotado! -2 puntos';
             document.getElementById('feedback').className = 'feedback incorrect';
-			//Modificado
 			checkAnswer()
             setTimeout(() => {
                 generateQuestion();
@@ -358,8 +465,6 @@
                 document.getElementById('feedback').textContent = '⚠️ Introduce un número';
                 document.getElementById('feedback').className = 'feedback';
                 incorrectCount++;
-				//startTimer();
-                //return;
             }
             
             if (userAnswer === correctAnswer) {
