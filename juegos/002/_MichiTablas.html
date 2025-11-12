@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MichiTablas de Multiplicar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .score {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 2px;
+            font-weight: bold;
+        }
+
+        .timer {
+            font-size: 3em;
+            color: #ff6b6b;
+            margin-bottom: 2px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .timer.warning {
+            color: #ff3333;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .question {
+            font-size: 3em;
+            color: #333;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .input-group {
+            margin: 30px 0;
+        }
+
+        input[type="number"] {
+            font-size: 2em;
+            padding: 15px;
+            width: 150px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+        }
+
+        button {
+            font-size: 1.2em;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .feedback {
+            font-size: 1.4em;
+            margin: 20px 0;
+            min-height: 40px;
+            font-weight: bold;
+        }
+
+        .correct {
+            color: #51cf66;
+        }
+
+        .incorrect {
+            color: #ff6b6b;
+        }
+
+        .stats {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #333;
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        .display {
+            font-size: 2.5em;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .key {
+            font-size: 1.8em;
+            padding: 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .key:active {
+            background: #667eea;
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .key.zero {
+            grid-column: span 2;
+        }
+
+        .key.delete {
+            background: #ff6b6b;
+            color: white;
+            border-color: #ff6b6b;
+        }
+
+        .key.delete:active {
+            background: #ff5252;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Tablas de Multiplicar</h1>
+        
+        <div class="score">Puntos: <span id="score">0</span></div>
+        <div class="timer" id="timer">10</div>
+        
+        <div class="question" id="question">? × ?</div>
+        
+        <div class="display" id="display">_</div>
+		
+		<div class="feedback" id="feedback"></div>
+        
+        <div class="keyboard">
+            <div class="key" onclick="addDigit('1')">1</div>
+            <div class="key" onclick="addDigit('2')">2</div>
+            <div class="key" onclick="addDigit('3')">3</div>
+            <div class="key" onclick="addDigit('4')">4</div>
+            <div class="key" onclick="addDigit('5')">5</div>
+            <div class="key" onclick="addDigit('6')">6</div>
+            <div class="key" onclick="addDigit('7')">7</div>
+            <div class="key" onclick="addDigit('8')">8</div>
+            <div class="key" onclick="addDigit('9')">9</div>
+            <div class="key zero" onclick="addDigit('0')">0</div>
+            <div class="key delete" onclick="deleteDigit()">⌫</div>
+        </div>
+        
+        <div class="action-buttons">
+            <button onclick="checkAnswer()">Comprobar</button>
+            <button onclick="checkAnswer()">Siguiente</button>
+        </div>
+        
+        
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Correctas</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Incorrectas</div>
+                <div class="stat-value" id="incorrect">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Total</div>
+                <div class="stat-value" id="total">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let num1, num2, correctAnswer;
+        let timeLeft = 10;
+        let timerInterval;
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let currentAnswer = '';
+
+        function generateQuestion() {
+            num1 = Math.floor(Math.random() * 10) + 1;
+            num2 = Math.floor(Math.random() * 10) + 1;
+            correctAnswer = num1 * num2;
+            
+            document.getElementById('question').textContent = `${num1} × ${num2}`;
+            currentAnswer = '';
+            updateDisplay();
+            document.getElementById('feedback').textContent = '';
+            
+            startTimer();
+        }
+
+        function addDigit(digit) {
+            if (currentAnswer.length < 3) {
+                currentAnswer += digit;
+                updateDisplay();
+            }
+        }
+
+        function deleteDigit() {
+            currentAnswer = currentAnswer.slice(0, -1);
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('display').textContent = currentAnswer || '_';
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 10;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 3) {
+                    document.getElementById('timer').classList.add('warning');
+                } else {
+                    document.getElementById('timer').classList.remove('warning');
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer').textContent = timeLeft;
+        }
+
+        function timeUp() {
+		
+            //score = Math.max(0, score - 2);
+            incorrectCount++;
+            updateDisplay();
+            document.getElementById('feedback').textContent = '⏰ ¡Tiempo agotado! -2 puntos';
+            document.getElementById('feedback').className = 'feedback incorrect';
+			//Modificado
+			checkAnswer()
+            setTimeout(() => {
+                generateQuestion();
+            }, 1500);
+        }
+
+        function checkAnswer() {
+            clearInterval(timerInterval);
+            
+            const userAnswer = parseInt(currentAnswer);
+            
+            if (isNaN(userAnswer) || currentAnswer === '') {
+			    score = Math.max(0, score - 2);
+                document.getElementById('feedback').textContent = '⚠️ Introduce un número';
+                document.getElementById('feedback').className = 'feedback';
+                incorrectCount++;
+				//startTimer();
+                //return;
+            }
+            
+            if (userAnswer === correctAnswer) {
+                score += 5;
+                correctCount++;
+				
+                document.getElementById('feedback').textContent = `✅ ${correctAnswer} ¡Correcto! +5 puntos`;
+                document.getElementById('feedback').className = 'feedback correct';
+				currentAnswer = '';
+            } else {
+                score = Math.max(0, score - 2);
+                incorrectCount++;
+				
+                document.getElementById('feedback').textContent = `❌ La respuesta es ${correctAnswer}. -2 puntos`;
+                document.getElementById('feedback').className = 'feedback incorrect';
+				currentAnswer = '';
+            }
+            
+            updateStats();
+            
+            setTimeout(() => {
+                generateQuestion();
+            }, 1500);
+        }
+
+        function nextQuestion() {
+            clearInterval(timerInterval);
+            generateQuestion();
+        }
+
+        function updateStats() {
+		    updateDisplay();
+            document.getElementById('score').textContent = score;
+            document.getElementById('correct').textContent = correctCount;
+            document.getElementById('incorrect').textContent = incorrectCount;
+            document.getElementById('total').textContent = correctCount + incorrectCount;
+        }
+
+        // Iniciar el juego
+        generateQuestion();
+    </script>
+</body>
+</html>
