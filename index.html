@@ -621,6 +621,12 @@
                         <div class="activity-description">Juega con Chispa y Tigreto en aventuras increíbles</div>
                     </div>
 
+                    <div class="activity-item" onclick="visita('juegosTablas')">
+                        <div class="activity-icon">🎮</div>
+                        <div class="activity-title">Zona de Juegos</div>
+                        <div class="activity-description">Juega con Chispa y Tigreto en aventuras increíbles</div>
+                    </div>
+
                     <div class="activity-item" onclick="visita('learn')">
                         <div class="activity-icon">👩‍🎓</div>
                         <div class="activity-title">Zona de Idiomas</div>
@@ -692,8 +698,10 @@ function visitCharacter(character) {
 function visita(character) {
     if (character.toLowerCase() === "juegos") {
         window.location.href = "./juegos/001/index.html";
+    } else if (character.toLowerCase() === "juegosTablas") {
+        window.location.href = "./juegos/002/index.html"; // Cambia la ruta según tu estructura de directorios
     } else if (character.toLowerCase() === "learn") {
-        window.location.href = "https://zero4michilearn.onrender.com/"; // Cambia la ruta según tu estructura de directorios
+        window.location.href = "https://zero4michilearn.onrender.com/"; // Cambia la ruta según tu estructura de directorios    
     } else {
         alert(`¡Visitando la página de ${character.charAt(0).toUpperCase() + character.slice(1)}! 🐱✨`);
         //window.location.href = `${character.toLowerCase()}.html`; // Redirige a la página del personaje ingresado
