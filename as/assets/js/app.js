@@ -17,7 +17,10 @@ import {
   STATUS_VALUES,
   PRIORITY_VALUES,
   getDirtyItems,
-  markAsSaved
+  markAsSaved,      // 👈 IMPORTANTE
+  STATUS_VALUES,
+  PRIORITY_VALUES
+
 } from "./store.js";
 
 import { cryptoManager } from "./crypto-utils.js"
@@ -2888,7 +2891,8 @@ function attachGlobalEvents() {
   tbody.addEventListener("keydown", onCellKeyDown);
 
   // Botones Guardar / Revertir
-  selectors.saveBtn.addEventListener("click", onSaveClick);
+  //selectors.saveBtn.addEventListener("click", onSaveClick);
+  selectors.saveBtn.addEventListener("click", saveChangesToAsana);
   selectors.revertBtn.addEventListener("click", onRevertClick);
 
   // Tema claro/oscuro
@@ -3458,7 +3462,99 @@ function applyColumnVisibility_old() {
 }
 
 /*Guardar en Asana*/
+
 async function saveChangesToAsana() {
+  const dirty = getDirtyItems();
+
+  if (dirty.length === 0) {
+    announce("No hay cambios que guardar.");
+    return;
+  }
+
+  const token = (selectors.asanaToken.value || "").trim();
+  if (!token) {
+    announce("No has introducido tu token de Asana.");
+    return;
+  }
+
+  showAutoSaveSpinner && showAutoSaveSpinner();
+  announce("Guardando cambios en Asana…");
+
+  for (const item of dirty) {
+    try {
+      // 1) Nombre (task) – quitar prefijos ">>" en subtareas
+      let plainName = item.task || "";
+      if (item.depth > 0) {
+        plainName = plainName.replace(/^(\>\>\s*)+/, "");
+      }
+
+      // 2) Descripción (notes)
+      let plainDescription = item.description || "";
+
+      // 3) Estado
+      const completed = item.status === "Completada";
+
+      // 4) Fecha límite
+      const dueOn = item.dueDate || null;
+
+      // 5) Cifrado si procede
+      let nameToSend = plainName;
+      let notesToSend = plainDescription;
+
+      if (cryptoManager.masterPassword) {
+        if (nameToSend) {
+          nameToSend = await cryptoManager.encrypt(nameToSend);
+        }
+        if (notesToSend) {
+          notesToSend = await cryptoManager.encrypt(notesToSend);
+        }
+      }
+
+      // 6) Construir body para Asana
+      const body = {
+        name: nameToSend,
+        completed: completed
+      };
+      if (notesToSend) body.notes = notesToSend;
+      if (dueOn) body.due_on = dueOn;
+      else body.due_on = null; // permitir borrar fecha
+
+      // 7) PUT a Asana
+      const res = await fetch(
+        `https://app.asana.com/api/1.0/tasks/${encodeURIComponent(item.id)}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ data: body })
+        }
+      );
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} ${res.statusText} - ${txt}`);
+      }
+    } catch (err) {
+      console.error("Error guardando tarea:", item.id, err);
+      hideAutoSaveSpinner && hideAutoSaveSpinner();
+      announce("Error guardando en Asana. Revisa la consola.");
+      return; // salimos en cuanto falla una
+    }
+  }
+
+  // Si llegamos aquí, todas las tareas dirty se han guardado
+  markAsSaved();
+  hideAutoSaveSpinner && hideAutoSaveSpinner();
+  renderTableBody();
+  updateStats();
+  announce("Cambios guardados correctamente en Asana.");
+}
+
+
+
+async function saveChangesToAsana_oldold() {
   const dirty = getDirtyItems();
   if (dirty.length === 0) {
     announce("No hay cambios que guardar.");
