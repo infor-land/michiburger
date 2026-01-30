@@ -341,16 +341,20 @@ async function uploadEncryptedAttachment(taskId, file, token) {
 async function downloadAttachmentDecrypted(att, token) {
   try {
     // 1. Descargar SIEMPRE como binario
+	/*  
     const res = await fetch(att.download_url, {
       // IMPORTANTE: normalmente NO hace falta Authorization aquí,
       // download_url suele estar ya pre-firmada; si esta cabecera da problemas,
       // puedes quitar todo el objeto "headers".
       
-	  //headers: {
-      //  Authorization: `Bearer ${token}`
+	  headers: {
+        Authorization: `Bearer ${token}`
 		
       }
     });
+    */
+	const res = await fetch(att.download_url);  
+	  
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status} ${res.statusText}`);
@@ -2973,4 +2977,5 @@ async function saveChangesToAsana() {
    ================================ */
 
 document.addEventListener("DOMContentLoaded", init);
+
 
