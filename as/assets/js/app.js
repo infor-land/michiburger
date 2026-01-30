@@ -345,8 +345,10 @@ async function downloadAttachmentDecrypted(att, token) {
       // IMPORTANTE: normalmente NO hace falta Authorization aquí,
       // download_url suele estar ya pre-firmada; si esta cabecera da problemas,
       // puedes quitar todo el objeto "headers".
-      headers: {
-        Authorization: `Bearer ${token}`
+      
+	  //headers: {
+      //  Authorization: `Bearer ${token}`
+		
       }
     });
 
@@ -2971,3 +2973,4 @@ async function saveChangesToAsana() {
    ================================ */
 
 document.addEventListener("DOMContentLoaded", init);
+
