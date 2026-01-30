@@ -174,27 +174,135 @@
           <h2 id="newTaskTitle">📝 Nueva tarea</h2>
           <button type="button" class="modal__close" data-close-modal="newTaskModal">✕</button>
         </header>
-        <div class="modal__body">
-          <label class="field">
-            <span class="field__label">Proyecto</span>
-            <select id="newTaskProject" class="field__select"></select>
-          </label>
-          <label class="field">
-            <span class="field__label">Nombre de la tarea</span>
-            <input id="newTaskName" class="field__input" type="text" required />
-          </label>
-          <label class="field">
-            <span class="field__label">Fecha límite</span>
-            <input id="newTaskDueDate" class="field__input" type="date" />
-          </label>
-          <div id="newTaskStatus" class="modal__status"></div>
-        </div>
+        
+		<div class="modal__body">
+		  <label class="field">
+			<span class="field__label">Proyecto</span>
+			<select id="newTaskProject" class="field__select"></select>
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Nombre de la tarea</span>
+			<input id="newTaskName" class="field__input" type="text" required />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Descripción</span>
+			<textarea id="newTaskDescription" class="field__input" rows="3"></textarea>
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Fecha límite</span>
+			<input id="newTaskDueDate" class="field__input" type="date" />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Responsable (texto)</span>
+			<input id="newTaskOwner" class="field__input" type="text" />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Email responsable</span>
+			<input id="newTaskEmail" class="field__input" type="email" />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Prioridad</span>
+			<select id="newTaskPriority" class="field__select">
+			  <option value="Baja">Baja</option>
+			  <option value="Media" selected>Media</option>
+			  <option value="Alta">Alta</option>
+			  <option value="Crítica">Crítica</option>
+			</select>
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Horas estimadas</span>
+			<input id="newTaskHours" class="field__input" type="number" min="0" step="0.5" />
+		  </label>
+
+		  <div id="newTaskStatus" class="modal__status"></div>
+		</div>
+		
+		
         <footer class="modal__footer">
           <button type="button" class="btn btn-secondary" data-close-modal="newTaskModal">Cancelar</button>
           <button type="button" class="btn btn-primary" id="createTaskBtn">Crear tarea</button>
         </footer>
       </div>
     </div>
+
+	<!-- Modal editar tarea completa -->
+	<div id="editTaskDetailsModal" class="modal" aria-hidden="true">
+	  <div class="modal__backdrop"></div>
+	  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="editTaskDetailsTitle">
+		<header class="modal__header">
+		  <h2 id="editTaskDetailsTitle">✏️ Editar tarea</h2>
+		  <button type="button" class="modal__close" data-close-modal="editTaskDetailsModal">✕</button>
+		</header>
+		<div class="modal__body">
+		  <p class="modal__hint">
+			<strong>Proyecto:</strong> <span id="editTaskProjectLabel"></span>
+		  </p>
+
+		  <label class="field">
+			<span class="field__label">Nombre de la tarea</span>
+			<input id="editTaskNameInput" class="field__input" type="text" />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Descripción</span>
+			<textarea id="editTaskDescriptionInput" class="field__input" rows="3"></textarea>
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Estado</span>
+			<select id="editTaskStatusInput" class="field__select">
+			  <option value="Pendiente">Pendiente</option>
+			  <option value="En progreso">En progreso</option>
+			  <option value="Completada">Completada</option>
+			  <option value="Bloqueada">Bloqueada</option>
+			</select>
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Prioridad</span>
+			<select id="editTaskPriorityInput" class="field__select">
+			  <option value="Baja">Baja</option>
+			  <option value="Media">Media</option>
+			  <option value="Alta">Alta</option>
+			  <option value="Crítica">Crítica</option>
+			</select>
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Responsable (texto)</span>
+			<input id="editTaskOwnerInput" class="field__input" type="text" />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Email responsable</span>
+			<input id="editTaskEmailInput" class="field__input" type="email" />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Fecha límite</span>
+			<input id="editTaskDueDateInput" class="field__input" type="date" />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Horas estimadas</span>
+			<input id="editTaskHoursInput" class="field__input" type="number" min="0" step="0.5" />
+		  </label>
+
+		  <div id="editTaskDetailsStatus" class="modal__status"></div>
+		</div>
+		<footer class="modal__footer">
+		  <button type="button" class="btn btn-secondary" data-close-modal="editTaskDetailsModal">Cancelar</button>
+		  <button type="button" class="btn btn-primary" id="saveTaskDetailsBtn">Guardar cambios</button>
+		</footer>
+	  </div>
+	</div>
 
     <!-- Modal nueva subtarea -->
     <div id="newSubtaskModal" class="modal" aria-hidden="true">
