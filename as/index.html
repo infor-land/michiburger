@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestor de Proyectos y Tareas (Asana)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="theme-light">
+  <header class="app-header">
+    <div class="app-header__main">
+      <h1>📋 Gestor de Proyectos y Tareas (Asana)</h1>
+      <p class="app-header__subtitle">
+        Vista tabular conectada a la API de Asana: selecciona workspace y proyecto, y muestra las tareas en forma de tabla editable (solo lectura en Asana).
+      </p>
+    </div>
+    <div class="app-header__actions">
+      <button id="themeToggleBtn" class="btn btn-secondary" type="button">
+        🌞 / 🌙 Tema
+      </button>
+
+	  <button id="saveBtn" class="btn btn-primary" type="button">💾 Guardar cambios</button>
+
+      <button id="revertBtn" class="btn btn-danger" type="button">
+        ↩️ Revertir cambios
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="asana-config" aria-label="Configuración Asana">
+      <div class="asana-config__row">
+        <label class="field">
+          <span class="field__label">🔐 Token personal de Asana (PAT)</span>
+          <input
+            id="asanaToken"
+            class="field__input"
+            type="password"
+            placeholder="1/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          />
+        </label>
+        <label class="field">
+          <span class="field__label">🏢 Workspace</span>
+          <select id="asanaWorkspace" class="field__select">
+            <option value="">Selecciona workspace…</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field__label">📁 Proyecto</span>
+          
+			  <!-- Selector múltiple: puedes elegir varios proyectos o la opción "Todos" -->
+			  <select id="asanaProject" class="field__select" multiple size="6">
+				<option value="ALL">Todos los proyectos</option>
+			  </select>
+			  <small style="font-size:0.7rem;color:#6b7280;">
+				Consejo: usa Ctrl / Cmd para seleccionar varios proyectos.  
+				Si dejas marcada la opción "Todos los proyectos", se cargarán todos.
+			  </small>
+
+        </label>
+		
+       <label class="field">
+         <span class="field__label">🔐 Contraseña de cifrado</span>
+         <input
+           id="cryptoPassword"
+           class="field__input"
+           type="password"
+           placeholder="Opcional: para desencriptar nombres"
+         />
+       </label>
+
+        <div class="asana-config__buttons">
+          <button id="loadMetaBtn" class="btn btn-secondary" type="button">
+            🔄 Cargar workspaces/proyectos
+          </button>
+          <button id="loadTasksBtn" class="btn btn-primary" type="button">
+            📥 Cargar tareas
+          </button>
+        </div>
+      </div>
+      <p class="asana-config__hint">
+        Tu token solo se usa en el navegador para llamar a la API de Asana. No se envía a ningún servidor propio.
+      </p>
+    </section>
+
+    <section class="toolbar" aria-label="Barra de filtros y estado">
+      <div class="toolbar__filters">
+        <label class="field">
+          <span class="field__label">🔎 Búsqueda global</span>
+          <input
+            id="globalFilter"
+            class="field__input"
+            type="text"
+            placeholder="Filtrar por cualquier columna (proyecto, tarea, estado, responsable...)"
+          />
+        </label>
+		
+   <button id="newProjectBtn" class="btn btn-success" type="button">
+     📁 Nuevo proyecto
+   </button>
+   <button id="newTaskBtn" class="btn btn-success" type="button">
+     📝 Nueva tarea
+   </button>
+
+      </div>
+	  
+
+
+      <div class="toolbar__stats" aria-live="polite" id="statsBar">
+        Introduce tu token y carga tareas desde Asana.
+      </div>
+	  
+<div id="autoSaveSpinner" class="autosave-spinner hidden">
+  <div class="spinner"></div>
+  <span>Guardando…</span>
+</div>
+	  
+	   <button id="configColumnsBtn" class="btn btn-secondary">
+   ⚙️ 
+ </button>
+    </section>
+
+    <section class="table-section">
+      <div class="table-wrapper" id="tableWrapper">
+        <!-- La tabla se genera dinámicamente via app.js -->
+      </div>
+      <div id="liveRegion" class="visually-hidden" aria-live="polite"></div>
+    </section>
+	
+	
+<!-- Modales de creación -->
+
+    <!-- Modal nuevo proyecto -->
+    <div id="newProjectModal" class="modal" aria-hidden="true">
+      <div class="modal__backdrop"></div>
+      <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="newProjectTitle">
+        <header class="modal__header">
+          <h2 id="newProjectTitle">📁 Nuevo proyecto</h2>
+          <button type="button" class="modal__close" data-close-modal="newProjectModal">✕</button>
+        </header>
+        <div class="modal__body">
+		  <label class="field">
+			<span class="field__label">Nombre del proyecto</span>
+			<input id="newProjectName" class="field__input" type="text" required />
+		  </label>
+
+		  <label class="field">
+			<span class="field__label">Equipo</span>
+			<select id="newProjectTeam" class="field__select">
+			  <option value="">Cargando equipos...</option>
+			</select>
+		  </label>
+
+		  <p class="modal__hint">
+			El proyecto se creará en el <strong>workspace</strong> y <strong>equipo</strong> seleccionados.
+		  </p>
+
+		  <div id="newProjectStatus" class="modal__status"></div>
+		</div>
+
+        <footer class="modal__footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="newProjectModal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="createProjectBtn">Crear proyecto</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal nueva tarea -->
+    <div id="newTaskModal" class="modal" aria-hidden="true">
+      <div class="modal__backdrop"></div>
+      <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="newTaskTitle">
+        <header class="modal__header">
+          <h2 id="newTaskTitle">📝 Nueva tarea</h2>
+          <button type="button" class="modal__close" data-close-modal="newTaskModal">✕</button>
+        </header>
+        <div class="modal__body">
+          <label class="field">
+            <span class="field__label">Proyecto</span>
+            <select id="newTaskProject" class="field__select"></select>
+          </label>
+          <label class="field">
+            <span class="field__label">Nombre de la tarea</span>
+            <input id="newTaskName" class="field__input" type="text" required />
+          </label>
+          <label class="field">
+            <span class="field__label">Fecha límite</span>
+            <input id="newTaskDueDate" class="field__input" type="date" />
+          </label>
+          <div id="newTaskStatus" class="modal__status"></div>
+        </div>
+        <footer class="modal__footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="newTaskModal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="createTaskBtn">Crear tarea</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal nueva subtarea -->
+    <div id="newSubtaskModal" class="modal" aria-hidden="true">
+      <div class="modal__backdrop"></div>
+      <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="newSubtaskTitle">
+        <header class="modal__header">
+          <h2 id="newSubtaskTitle">🧩 Nueva subtarea</h2>
+          <button type="button" class="modal__close" data-close-modal="newSubtaskModal">✕</button>
+        </header>
+        <div class="modal__body">
+          <p class="modal__hint"><strong>Tarea padre:</strong> <span id="parentTaskLabel"></span></p>
+          <label class="field">
+            <span class="field__label">Nombre de la subtarea</span>
+            <input id="newSubtaskName" class="field__input" type="text" required />
+          </label>
+          <label class="field">
+            <span class="field__label">Fecha límite</span>
+            <input id="newSubtaskDueDate" class="field__input" type="date" />
+          </label>
+          <div id="newSubtaskStatus" class="modal__status"></div>
+        </div>
+        <footer class="modal__footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="newSubtaskModal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="createSubtaskBtn">Crear subtarea</button>
+        </footer>
+      </div>
+    </div>	
+
+
+<!-- Modal editar descripción -->
+<div id="editDescriptionModal" class="modal" aria-hidden="true">
+  <div class="modal__backdrop"></div>
+  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="editDescriptionTitle">
+    <header class="modal__header">
+      <h2 id="editDescriptionTitle">📝 Descripción</h2>
+      <button type="button" class="modal__close" data-close-modal="editDescriptionModal">✕</button>
+    </header>
+    <div class="modal__body">
+      <p class="modal__hint">
+        <strong>Tarea:</strong> <span id="editDescriptionTaskTitle"></span>
+      </p>
+      <textarea id="editDescriptionTextarea" class="field__input" rows="4"
+        style="resize: vertical; min-height: 80px;"></textarea>
+      <div id="editDescriptionStatus" class="modal__status"></div>
+    </div>
+    <footer class="modal__footer">
+      <button type="button" class="btn btn-secondary" data-close-modal="editDescriptionModal">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="saveDescriptionBtn">Guardar descripción</button>
+    </footer>
+  </div>
+</div>
+
+
+	
+	<!-- Modal Configurar Columnas -->
+	<div id="columnConfigModal" class="modal" aria-hidden="true">
+  <div class="modal__backdrop"></div>
+  <div class="modal__dialog">
+    <header class="modal__header">
+      <h2>⚙️ Configurar columnas</h2>
+      <button class="modal__close" data-close-modal="columnConfigModal">✕</button>
+    </header>
+
+    <div class="modal__body" id="columnConfigBody">
+      <!-- aquí se generan dinámicamente los checkboxes -->
+    </div>
+
+    <footer class="modal__footer">
+      <button class="btn btn-secondary" data-close-modal="columnConfigModal">Cerrar</button>
+      <button id="saveColumnConfigBtn" class="btn btn-primary">Guardar</button>
+    </footer>
+  </div>
+</div>
+	
+  </main>
+
+  <footer class="app-footer">
+    <p>
+      Los cambios se mantienen en memoria local. El botón
+      <strong>Guardar cambios</strong> muestra en consola el payload que podrías
+      enviar a la API de Asana si quisieras aplicar las modificaciones de forma real.
+    </p>
+  </footer>
+
+  <script type="module" src="assets/js/app.js"></script>
+  
+</body>
+</html>
