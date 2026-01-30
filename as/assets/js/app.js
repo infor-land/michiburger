@@ -49,7 +49,11 @@ const columns = [
     label: "Horas estimadas",
     type: "number",
     editable: true
-  }
+  },
+
+  // 👇 ESTA ES LA CLAVE QUE ARREGLA TODO
+  { key: "actions", label: "Acciones", type: "actions", editable: false }
+
 ];
 
 const selectors = {
@@ -78,6 +82,13 @@ const selectors = {
  newTaskProject: document.getElementById("newTaskProject"),
  newTaskName: document.getElementById("newTaskName"),
  newTaskDueDate: document.getElementById("newTaskDueDate"),
+
+ newTaskDescription: document.getElementById("newTaskDescription"),
+ newTaskOwner: document.getElementById("newTaskOwner"),
+ newTaskEmail: document.getElementById("newTaskEmail"),
+ newTaskPriority: document.getElementById("newTaskPriority"),
+ newTaskHours: document.getElementById("newTaskHours"),
+
  newTaskStatus: document.getElementById("newTaskStatus"),
  newSubtaskModal: document.getElementById("newSubtaskModal"),
  parentTaskLabel: document.getElementById("parentTaskLabel"),
@@ -93,6 +104,21 @@ const selectors = {
  editDescriptionTextarea: document.getElementById("editDescriptionTextarea"),
  editDescriptionStatus: document.getElementById("editDescriptionStatus"),
  saveDescriptionBtn: document.getElementById("saveDescriptionBtn"),
+ 
+ 
+ editTaskDetailsModal: document.getElementById("editTaskDetailsModal"),
+ editTaskProjectLabel: document.getElementById("editTaskProjectLabel"),
+ editTaskNameInput: document.getElementById("editTaskNameInput"),
+ editTaskDescriptionInput: document.getElementById("editTaskDescriptionInput"),
+ editTaskStatusInput: document.getElementById("editTaskStatusInput"),
+ editTaskPriorityInput: document.getElementById("editTaskPriorityInput"),
+ editTaskOwnerInput: document.getElementById("editTaskOwnerInput"),
+ editTaskEmailInput: document.getElementById("editTaskEmailInput"),
+ editTaskDueDateInput: document.getElementById("editTaskDueDateInput"),
+ editTaskHoursInput: document.getElementById("editTaskHoursInput"),
+ editTaskDetailsStatus: document.getElementById("editTaskDetailsStatus"),
+ saveTaskDetailsBtn: document.getElementById("saveTaskDetailsBtn"),
+
 
 };
 /*Columnas persistencia*/
@@ -102,6 +128,8 @@ let columnWidths = JSON.parse(localStorage.getItem("columnWidths") || "{}");
 /*AutoGuardado*/
 let autosaveTimer=null;
 
+/*editar tarea*/
+let currentEditTaskId = null;
 
 function resetAutoSaveTimer() {
   if (autosaveTimer) clearTimeout(autosaveTimer);
@@ -341,20 +369,17 @@ async function uploadEncryptedAttachment(taskId, file, token) {
 async function downloadAttachmentDecrypted(att, token) {
   try {
     // 1. Descargar SIEMPRE como binario
-	/*  
+	/*
     const res = await fetch(att.download_url, {
       // IMPORTANTE: normalmente NO hace falta Authorization aquí,
       // download_url suele estar ya pre-firmada; si esta cabecera da problemas,
       // puedes quitar todo el objeto "headers".
-      
-	  headers: {
+      headers: {
         Authorization: `Bearer ${token}`
-		
       }
     });
-    */
-	const res = await fetch(att.download_url);  
-	  
+	*/
+	const res = await fetch(att.download_url);
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status} ${res.statusText}`);
@@ -780,52 +805,54 @@ async function handleFileUpload(item, file, panel) {
 /**
  * Carga lista de workspaces en el select correspondiente
  */
+ 
+async function loadWorkspaces() {
+  const token = (selectors.asanaToken.value || "").trim();
+  if (!token) {
+    announce("Por favor, introduce tu token primero.");
+    return;
+  }
 
-async function loadWorkspaces() {  
-	const token = (selectors.asanaToken.value || "").trim();  
-	if (!token) {    
-		announce("Por favor, introduce tu token primero.");    
-		return;  
-	}  
-	try {    
-		selectors.statsBar.textContent = "Cargando workspaces...";    
-		const result = await asanaGet("/workspaces", token);    
-		const workspaces = result.data || [];    
-		
-		const sel = selectors.asanaWorkspace;    
-		sel.innerHTML = '<option value="">Selecciona workspace…</option>';    
-		
-		workspaces.forEach((ws) => {      
-			const opt = document.createElement("option");      
-			opt.value = ws.gid;      
-			opt.textContent = ws.name;      
-			sel.appendChild(opt);    
-		});    
-		
-		if (workspaces.length === 0) {      
-			selectors.statsBar.textContent =        
-				"No se encontraron workspaces para este token.";      
-			return;    
-		}    
-		// ✅ Si solo hay un workspace, lo seleccionamos y cargamos sus proyectos    
-		if (workspaces.length === 1) {      
-			sel.value = workspaces[0].gid;      
-			selectors.statsBar.textContent = `Workspace seleccionado automáticamente: ${workspaces[0].name}. Cargando proyectos…`;      
-			await loadProjects(workspaces[0].gid);    
-		} else {      
-			selectors.statsBar.textContent = `Workspaces cargados (${workspaces.length}). Selecciona uno para ver sus proyectos.`;    
-		}    
-		
-		announce("Workspaces cargados correctamente.");  
-	} catch (err) {    
-		console.error(err);    
-		selectors.statsBar.textContent = `Error al cargar workspaces: ${err.message}`;    
-		announce("Error al cargar workspaces de Asana.");  
-	}
-}
+  try {
+    selectors.statsBar.textContent = "Cargando workspaces...";
+    const result = await asanaGet("/workspaces", token);
+    const workspaces = result.data || [];
 
+    const sel = selectors.asanaWorkspace;
+    sel.innerHTML = '<option value="">Selecciona workspace…</option>';
 
+    workspaces.forEach((ws) => {
+      const opt = document.createElement("option");
+      opt.value = ws.gid;
+      opt.textContent = ws.name;
+      sel.appendChild(opt);
+    });
 
+    if (workspaces.length === 0) {
+      selectors.statsBar.textContent =
+        "No se encontraron workspaces para este token.";
+      return;
+    }
+
+    // ✅ Si solo hay un workspace, lo seleccionamos y cargamos sus proyectos
+    if (workspaces.length === 1) {
+      sel.value = workspaces[0].gid;
+      selectors.statsBar.textContent = `Workspace seleccionado automáticamente: ${workspaces[0].name}. Cargando proyectos…`;
+      await loadProjects(workspaces[0].gid);
+    } else {
+      selectors.statsBar.textContent = `Workspaces cargados (${workspaces.length}). Selecciona uno para ver sus proyectos.`;
+    }
+
+    announce("Workspaces cargados correctamente.");
+  } catch (err) {
+    console.error(err);
+    selectors.statsBar.textContent = `Error al cargar workspaces: ${err.message}`;
+    announce("Error al cargar workspaces de Asana.");
+  }
+} 
+ 
+ 
+ 
 async function loadWorkspaces_old() {
   const token = (selectors.asanaToken.value || "").trim();
   if (!token) {
@@ -1134,7 +1161,14 @@ function openNewTaskModal() {
   });
 
   selectors.newTaskName.value = "";
+
+ selectors.newTaskDescription.value = "";
   selectors.newTaskDueDate.value = "";
+ selectors.newTaskOwner.value = "";
+ selectors.newTaskEmail.value = "";
+ selectors.newTaskPriority.value = "Media";
+ selectors.newTaskHours.value = "";
+
   selectors.newTaskStatus.textContent = "";
 
   openModal(selectors.newTaskModal);
@@ -1144,7 +1178,14 @@ async function createTask() {
   const token = (selectors.asanaToken.value || "").trim();
   const projectId = selectors.newTaskProject.value;
   let name = selectors.newTaskName.value.trim();
+
+ let description = selectors.newTaskDescription.value.trim();
   const dueDate = selectors.newTaskDueDate.value || null;
+ const owner = selectors.newTaskOwner.value.trim();
+ const email = selectors.newTaskEmail.value.trim();
+ const priority = selectors.newTaskPriority.value;
+ const hours = selectors.newTaskHours.value ? Number(selectors.newTaskHours.value) : null
+
 
   if (!token || !projectId || !name) {
     selectors.newTaskStatus.textContent =
@@ -1157,11 +1198,21 @@ async function createTask() {
   try {
     const encryptedName = await encryptNameIfNeeded(name);
 
+
+   // Descripción cifrada igual que notas
+   let notesToSend = description;
+   if (cryptoManager.masterPassword && notesToSend) {
+     notesToSend = await cryptoManager.encrypt(notesToSend);
+   }
+
+
+
     const body = {
       name: encryptedName,
       projects: [projectId]
     };
     if (dueDate) body.due_on = dueDate;
+	if (notesToSend) body.notes = notesToSend;
 
     await asanaPost("/tasks", token, body);
 
@@ -1621,6 +1672,345 @@ function renderTableShell() {
   const thead = document.createElement("thead");
 
   // =========================
+  // CABECERAS
+  // =========================
+  const headerRow = document.createElement("tr");
+
+  columns.forEach((col) => {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.tabIndex = 0;
+    th.dataset.colKey = col.key;
+    th.classList.add("th-sortable");
+    th.setAttribute("aria-sort", "none");
+
+    // Visibilidad
+    if (columnVisibility[col.key] === false) {
+      th.style.display = "none";
+    }
+
+    // Ancho guardado
+    if (columnWidths[col.key]) {
+      th.style.width = columnWidths[col.key];
+    }
+
+    // Resizer
+    const resizer = document.createElement("div");
+    resizer.className = "th-resizer";
+    resizer.addEventListener("mousedown", startResize);
+    th.appendChild(resizer);
+
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = col.label;
+    labelSpan.className = "th-sort-label";
+
+    const indicator = document.createElement("span");
+    indicator.className = "th-sort-indicator";
+    indicator.textContent = "⇅";
+
+    th.append(labelSpan, indicator);
+    headerRow.appendChild(th);
+  });
+
+  // =========================
+  // FILTROS
+  // =========================
+  const filtersRow = document.createElement("tr");
+  filtersRow.className = "table-filters-row";
+
+  columns.forEach((col) => {
+    const filterTh = document.createElement("th");
+    filterTh.dataset.colKey = col.key;
+
+    if (columnVisibility[col.key] === false) {
+      filterTh.style.display = "none";
+    }
+
+    // Due date (rango)
+    if (col.key === "dueDate") {
+      const rangeDiv = document.createElement("div");
+      rangeDiv.className = "table-filter-range";
+
+      const from = document.createElement("input");
+      from.type = "date";
+      from.className = "table-filter-input";
+      from.dataset.filterKey = "dueDateFrom";
+
+      const to = document.createElement("input");
+      to.type = "date";
+      to.className = "table-filter-input";
+      to.dataset.filterKey = "dueDateTo";
+
+      rangeDiv.append(from, to);
+      filterTh.appendChild(rangeDiv);
+    }
+
+    // Estimated Hours (rango)
+    else if (col.key === "estimatedHours") {
+      const rangeDiv = document.createElement("div");
+      rangeDiv.className = "table-filter-range";
+
+      const min = document.createElement("input");
+      min.type = "number";
+      min.className = "table-filter-input";
+      min.placeholder = "≥ horas";
+      min.dataset.filterKey = "hoursMin";
+
+      const max = document.createElement("input");
+      max.type = "number";
+      max.className = "table-filter-input";
+      max.placeholder = "≤ horas";
+      max.dataset.filterKey = "hoursMax";
+
+      rangeDiv.append(min, max);
+      filterTh.appendChild(rangeDiv);
+    }
+
+    // Select
+    else if (col.type === "select") {
+      const select = document.createElement("select");
+      select.className = "table-filter-input";
+      select.dataset.filterKey = col.key;
+
+      const optAll = document.createElement("option");
+      optAll.value = "";
+      optAll.textContent = "Todos";
+      select.appendChild(optAll);
+
+      col.options.forEach((opt) => {
+        const o = document.createElement("option");
+        o.value = opt;
+        o.textContent = opt;
+        select.appendChild(o);
+      });
+
+      filterTh.appendChild(select);
+    }
+
+    // Texto
+    else if (col.key !== "actions") {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "table-filter-input";
+      input.placeholder = "Filtrar...";
+      input.dataset.filterKey = col.key;
+      filterTh.appendChild(input);
+    }
+
+    filtersRow.appendChild(filterTh);
+  });
+
+  thead.append(headerRow, filtersRow);
+
+  const tbody = document.createElement("tbody");
+  tbody.id = "dataTableBody";
+
+  table.append(thead, tbody);
+  inner.appendChild(table);
+  wrapper.appendChild(inner);
+
+  headerRow.addEventListener("click", onHeaderClick);
+  headerRow.addEventListener("keydown", onHeaderKeyDown);
+  filtersRow.addEventListener("input", onColumnFilterInput);
+
+  // Aplicar visibilidad en cuanto se monta la tabla
+  applyColumnVisibility();
+}
+
+
+
+
+function renderTableShell_oldold() {
+  const wrapper = selectors.tableWrapper;
+  wrapper.innerHTML = "";
+
+  const inner = document.createElement("div");
+  inner.className = "table-wrapper-inner";
+
+  const table = document.createElement("table");
+  table.className = "data-table";
+  table.setAttribute("role", "grid");
+
+  const thead = document.createElement("thead");
+
+  // =========================
+  // Fila 1: CABECERAS
+  // =========================
+  const headerRow = document.createElement("tr");
+
+  columns.forEach((col) => {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.tabIndex = 0;
+    th.dataset.colKey = col.key;           // <── CLAVE NECESARIA
+    th.classList.add("th-sortable");
+    th.setAttribute("aria-sort", "none");
+
+    // Visibilidad guardada
+    if (columnVisibility[col.key] === false) {
+      th.style.display = "none";
+    }
+
+    // Ancho guardado
+    if (columnWidths[col.key]) {
+      th.style.width = columnWidths[col.key];
+    }
+
+    // Resizer
+    const resizer = document.createElement("div");
+    resizer.className = "th-resizer";
+    resizer.addEventListener("mousedown", startResize);
+    th.appendChild(resizer);
+
+    // Label + indicador orden
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = col.label;
+    labelSpan.className = "th-sort-label";
+
+    const indicator = document.createElement("span");
+    indicator.className = "th-sort-indicator";
+    indicator.textContent = "⇅";
+
+    th.append(labelSpan, indicator);
+    headerRow.appendChild(th);
+  });
+
+  // === Columna Acciones ===
+  // Necesita data-col-key para que applyColumnVisibility la controle correctamente.
+  const thActions = document.createElement("th");
+  thActions.textContent = "Acciones";
+  thActions.classList.add("actions-col");
+  thActions.dataset.colKey = "actions";   // <── ESTA ES LA CLAVE QUE FALTABA
+  headerRow.appendChild(thActions);
+
+  // =========================
+  // Fila 2: FILTROS
+  // =========================
+  const filtersRow = document.createElement("tr");
+  filtersRow.className = "table-filters-row";
+
+  columns.forEach((col) => {
+    const filterTh = document.createElement("th");
+    filterTh.dataset.colKey = col.key;     // <── NECESARIO
+
+    // ---- DueDate rango ----
+    if (col.key === "dueDate") {
+      const rangeDiv = document.createElement("div");
+      rangeDiv.className = "table-filter-range";
+
+      const from = document.createElement("input");
+      from.type = "date";
+      from.className = "table-filter-input";
+      from.dataset.filterKey = "dueDateFrom";
+
+      const to = document.createElement("input");
+      to.type = "date";
+      to.className = "table-filter-input";
+      to.dataset.filterKey = "dueDateTo";
+
+      rangeDiv.append(from, to);
+      filterTh.appendChild(rangeDiv);
+    }
+
+    // ---- Horas rango ----
+    else if (col.key === "estimatedHours") {
+      const rangeDiv = document.createElement("div");
+      rangeDiv.className = "table-filter-range";
+
+      const min = document.createElement("input");
+      min.type = "number";
+      min.className = "table-filter-input";
+      min.placeholder = "≥ horas";
+      min.dataset.filterKey = "hoursMin";
+
+      const max = document.createElement("input");
+      max.type = "number";
+      max.className = "table-filter-input";
+      max.placeholder = "≤ horas";
+      max.dataset.filterKey = "hoursMax";
+
+      rangeDiv.append(min, max);
+      filterTh.appendChild(rangeDiv);
+    }
+
+    // ---- Select ----
+    else if (col.type === "select") {
+      const select = document.createElement("select");
+      select.className = "table-filter-input";
+      select.dataset.filterKey = col.key;
+
+      const optAll = document.createElement("option");
+      optAll.value = "";
+      optAll.textContent = "Todos";
+      select.appendChild(optAll);
+
+      col.options.forEach((opt) => {
+        const o = document.createElement("option");
+        o.value = opt;
+        o.textContent = opt;
+        select.appendChild(o);
+      });
+
+      filterTh.appendChild(select);
+    }
+
+    // ---- Texto genérico ----
+    else {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "table-filter-input";
+      input.placeholder = "Filtrar...";
+      input.dataset.filterKey = col.key;
+      filterTh.appendChild(input);
+    }
+
+    // Visibilidad guardada
+    if (columnVisibility[col.key] === false) {
+      filterTh.style.display = "none";
+    }
+
+    filtersRow.appendChild(filterTh);
+  });
+
+  // === Columna Acciones ===
+  const thActionsFilter = document.createElement("th");
+  thActionsFilter.classList.add("actions-col");
+  thActionsFilter.dataset.colKey = "actions";  // <── TAMBIÉN AQUÍ
+  filtersRow.appendChild(thActionsFilter);
+
+  // =========================
+  // Montaje de la tabla
+  // =========================
+  thead.append(headerRow, filtersRow);
+
+  const tbody = document.createElement("tbody");
+  tbody.id = "dataTableBody";
+
+  table.append(thead, tbody);
+  inner.appendChild(table);
+  wrapper.appendChild(inner);
+
+  // Eventos de la tabla
+  headerRow.addEventListener("click", onHeaderClick);
+  headerRow.addEventListener("keydown", onHeaderKeyDown);
+  filtersRow.addEventListener("input", onColumnFilterInput);
+}
+
+
+function renderTableShell_old() {
+  const wrapper = selectors.tableWrapper;
+  wrapper.innerHTML = "";
+
+  const inner = document.createElement("div");
+  inner.className = "table-wrapper-inner";
+
+  const table = document.createElement("table");
+  table.className = "data-table";
+  table.setAttribute("role", "grid");
+
+  const thead = document.createElement("thead");
+
+  // =========================
   // Fila 1: CABECERAS
   // =========================
   const headerRow = document.createElement("tr");
@@ -1670,6 +2060,7 @@ function renderTableShell() {
 
   columns.forEach((col) => {
     const filterTh = document.createElement("th");
+	filterTh.dataset.colKey = col.key;
 
     // ---- DueDate rango ----
     if (col.key === "dueDate") {
@@ -1747,10 +2138,12 @@ function renderTableShell() {
   const thActions = document.createElement("th");
   thActions.textContent = "Acciones";
   thActions.classList.add("actions-col");
+  thActions.dataset.colKey = "actions"; 
   headerRow.appendChild(thActions);
 
   const thActionsFilter = document.createElement("th");
   thActionsFilter.classList.add("actions-col");
+  thActionsFilter.dataset.colKey = "actions";
   filtersRow.appendChild(thActionsFilter);
 
 
@@ -1836,12 +2229,274 @@ async function saveDescriptionFromModal() {
   }, 800);
 }
 
+
+function openEditTaskDetailsModal(item) {
+  currentEditTaskId = item.id;
+
+  selectors.editTaskProjectLabel.textContent = item.project || "";
+
+  selectors.editTaskNameInput.value = item.task || "";
+  selectors.editTaskDescriptionInput.value = item.description || "";
+  selectors.editTaskStatusInput.value = item.status || "Pendiente";
+  selectors.editTaskPriorityInput.value = item.priority || "Media";
+  selectors.editTaskOwnerInput.value = item.owner || "";
+  selectors.editTaskEmailInput.value = item.ownerEmail || "";
+  selectors.editTaskDueDateInput.value = item.dueDate || "";
+  selectors.editTaskHoursInput.value =
+    item.estimatedHours != null ? String(item.estimatedHours) : "";
+
+  selectors.editTaskDetailsStatus.textContent = "";
+  openModal(selectors.editTaskDetailsModal);
+}
+
+function closeEditTaskDetailsModal() {
+  closeModal("editTaskDetailsModal");
+  currentEditTaskId = null;
+}
+
+function saveEditTaskDetails() {
+  if (!currentEditTaskId) return;
+
+  const updatedFields = {
+    task: selectors.editTaskNameInput.value.trim(),
+    description: selectors.editTaskDescriptionInput.value,
+    status: selectors.editTaskStatusInput.value,
+    priority: selectors.editTaskPriorityInput.value,
+    owner: selectors.editTaskOwnerInput.value.trim(),
+    ownerEmail: selectors.editTaskEmailInput.value.trim(),
+    dueDate: selectors.editTaskDueDateInput.value || "",
+    estimatedHours: selectors.editTaskHoursInput.value
+      ? Number(selectors.editTaskHoursInput.value)
+      : null
+  };
+
+  Object.entries(updatedFields).forEach(([key, value]) => {
+    updateItemField(currentEditTaskId, key, value);
+  });
+
+  renderTableBody();
+  updateStats();
+  selectors.editTaskDetailsStatus.textContent = "Cambios aplicados en la tabla. No olvides guardar en Asana.";
+  resetAutoSaveTimer && resetAutoSaveTimer();
+
+  setTimeout(() => {
+    closeEditTaskDetailsModal();
+  }, 800);
+}
+
+
+
 /**
  * Renderiza el cuerpo de la tabla (tbody) con los datos visibles
  */
  
- 
 function renderTableBody() {
+  const tbody = document.getElementById("dataTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+  const items = getVisibleItems();
+
+  items.forEach((item) => {
+    const tr = document.createElement("tr");
+    tr.dataset.itemId = String(item.id);
+
+    columns.forEach((col) => {
+      const td = document.createElement("td");
+      td.dataset.colKey = col.key;
+
+      // Aplicar visibilidad del configurador
+      if (columnVisibility[col.key] === false) {
+        td.style.display = "none";
+      }
+
+      if (col.editable) {
+        td.classList.add("cell-editable");
+        td.tabIndex = 0;
+      }
+
+      let contentNode;
+
+      // === STATUS ===
+      if (col.key === "status") {
+        const span = document.createElement("span");
+        span.textContent = item.status || "";
+        const cls = getStatusBadgeClass(item.status);
+        span.className = `badge ${cls}`;
+        contentNode = span;
+      }
+
+      // === PRIORITY ===
+      else if (col.key === "priority") {
+        const span = document.createElement("span");
+        span.textContent = item.priority || "";
+        const cls = getPriorityBadgeClass(item.priority);
+        span.className = `badge ${cls}`;
+        contentNode = span;
+      }
+
+      // === ESTIMATED HOURS ===
+      else if (col.key === "estimatedHours") {
+        contentNode = document.createTextNode(
+          item.estimatedHours != null ? String(item.estimatedHours) : ""
+        );
+      }
+
+      // === TASK (TÍTULO + DESCRIPCIÓN + COMENTARIOS + ARCHIVOS) ===
+      else if (col.key === "task") {
+        const wrapper = document.createElement("div");
+
+        // ==== TÍTULO ====
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "task-title";
+        titleDiv.textContent = item.task || "";
+        wrapper.appendChild(titleDiv);
+
+        // ==== DESCRIPCIÓN ====
+        const descWrapper = document.createElement("div");
+        descWrapper.className = "task-desc-wrapper";
+
+        const descDiv = document.createElement("div");
+        descDiv.className = "task-desc task-desc-collapsed";
+
+        let hasDescription = !!item.description;
+        if (hasDescription) {
+          descDiv.textContent = item.description;
+        } else {
+          descDiv.textContent = "Añadir descripción…";
+          descDiv.classList.add("task-desc--empty");
+        }
+
+        let needsToggle = false;
+        if (hasDescription) {
+          const lines = item.description.split(/\r?\n/);
+          needsToggle = lines.length > 3;
+        }
+
+        const toggleBtn = document.createElement("span");
+        toggleBtn.className = "desc-toggle-btn";
+        toggleBtn.textContent = needsToggle ? "Mostrar más" : "";
+        if (!needsToggle) toggleBtn.style.display = "none";
+
+        descDiv.addEventListener("click", (e) => {
+          if (e.target === toggleBtn) return;
+          openEditDescriptionModal(item);
+        });
+
+        toggleBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const collapsed = descDiv.classList.contains("task-desc-collapsed");
+          if (collapsed) {
+            descDiv.classList.remove("task-desc-collapsed");
+            toggleBtn.textContent = "Mostrar menos";
+          } else {
+            descDiv.classList.add("task-desc-collapsed");
+            toggleBtn.textContent = "Mostrar más";
+          }
+        });
+
+        descWrapper.appendChild(descDiv);
+        descWrapper.appendChild(toggleBtn);
+        wrapper.appendChild(descWrapper);
+
+        // ==== COMENTARIOS ====
+        const commentsToggle = document.createElement("button");
+        commentsToggle.type = "button";
+        commentsToggle.className = "task-comments-toggle";
+
+        const count =
+          typeof item.commentCount === "number" ? item.commentCount : null;
+        commentsToggle.textContent =
+          count !== null
+            ? `💬 Comentarios (${count})`
+            : "💬 Comentarios (?)";
+
+        commentsToggle.addEventListener("click", () =>
+          toggleCommentsForTask(item, wrapper, commentsToggle)
+        );
+
+        const commentsPanel = document.createElement("div");
+        commentsPanel.className = "comments-panel hidden";
+        commentsPanel.dataset.taskId = item.id;
+
+        wrapper.appendChild(commentsToggle);
+        wrapper.appendChild(commentsPanel);
+
+        // ==== ARCHIVOS ====
+        const attachmentsToggle = document.createElement("button");
+        attachmentsToggle.type = "button";
+        attachmentsToggle.className = "task-attachments-toggle";
+
+        const filesCount =
+          typeof item.attachmentCount === "number"
+            ? item.attachmentCount
+            : null;
+
+        attachmentsToggle.textContent =
+          filesCount !== null
+            ? `📎 Archivos (${filesCount})`
+            : "📎 Archivos (?)";
+
+        attachmentsToggle.addEventListener("click", () =>
+          toggleAttachmentsForTask(item, wrapper, attachmentsToggle)
+        );
+
+        const attachmentsPanel = document.createElement("div");
+        attachmentsPanel.className = "attachments-panel hidden";
+        attachmentsPanel.dataset.taskId = item.id;
+
+        wrapper.appendChild(attachmentsToggle);
+        wrapper.appendChild(attachmentsPanel);
+
+        contentNode = wrapper;
+      }
+
+      // === ACCIONES ===
+      else if (col.key === "actions") {
+        const actionContainer = document.createElement("div");
+        actionContainer.style.display = "flex";
+        actionContainer.style.flexDirection = "column";
+        actionContainer.style.gap = "4px";
+
+        // ➕ Subtarea
+        const btnSub = document.createElement("button");
+        btnSub.type = "button";
+        btnSub.className = "btn btn-secondary btn-small";
+        btnSub.textContent = "➕";
+        btnSub.title = "Crear subtarea";
+        btnSub.addEventListener("click", () => openNewSubtaskModal(item));
+
+        // ✏️ Editar tarea
+        const btnEdit = document.createElement("button");
+        btnEdit.type = "button";
+        btnEdit.className = "btn btn-secondary btn-small";
+        btnEdit.textContent = "✏️";
+        btnEdit.title = "Editar detalles de la tarea";
+        btnEdit.addEventListener("click", () => openEditTaskDetailsModal(item));
+
+        actionContainer.appendChild(btnSub);
+        actionContainer.appendChild(btnEdit);
+
+        contentNode = actionContainer;
+      }
+
+      // === RESTO DE CAMPOS ===
+      else {
+        contentNode = document.createTextNode(item[col.key] ?? "");
+      }
+
+      td.appendChild(contentNode);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  markDirtyCells();
+  updateHeaderSortIndicators();
+} 
+ 
+function renderTableBody_oldoldold() {
   const tbody = document.getElementById("dataTableBody");
   if (!tbody) return;
 
@@ -2005,19 +2660,44 @@ function renderTableBody() {
       tr.appendChild(td);
     });
 
-    // Columna Acciones: botón "Nueva subtarea"
-    const tdActions = document.createElement("td");
-    tdActions.classList.add("actions-col");
-    const btnSub = document.createElement("button");
-    btnSub.type = "button";
-    btnSub.className = "btn btn-secondary btn-small";
-    btnSub.textContent = "➕";
-    btnSub.title = "Crear subtarea";
-    btnSub.addEventListener("click", () => {
-      openNewSubtaskModal(item);
-    });
-    tdActions.appendChild(btnSub);
-    tr.appendChild(tdActions);
+	// Columna Acciones: botones apilados (Subtarea↑, Editar↓)
+	const tdActions = document.createElement("td");
+	tdActions.classList.add("actions-col");
+
+	// Contenedor vertical para apilar los botones
+	const actionContainer = document.createElement("div");
+	actionContainer.style.display = "flex";
+	actionContainer.style.flexDirection = "column";
+	actionContainer.style.gap = "4px";   // separación vertical
+
+	// Botón: Nueva subtarea
+	const btnSub = document.createElement("button");
+	btnSub.type = "button";
+	btnSub.className = "btn btn-secondary btn-small";
+	btnSub.textContent = "➕";
+	btnSub.title = "Crear subtarea";
+	btnSub.addEventListener("click", () => {
+	  openNewSubtaskModal(item);
+	});
+
+	// Botón: Editar tarea
+	const btnEdit = document.createElement("button");
+	btnEdit.type = "button";
+	btnEdit.className = "btn btn-secondary btn-small";
+	btnEdit.textContent = "✏️";
+	btnEdit.title = "Editar detalles de la tarea";
+	btnEdit.addEventListener("click", () => {
+	  openEditTaskDetailsModal(item);
+	});
+
+	// Orden: primero ➕, luego ✏️
+	actionContainer.appendChild(btnSub);
+	actionContainer.appendChild(btnEdit);
+
+	tdActions.appendChild(actionContainer);
+	tr.appendChild(tdActions);
+
+
 
     tbody.appendChild(tr);
   });
@@ -2028,253 +2708,6 @@ function renderTableBody() {
  
  
  
-function renderTableBody_old() {
-  const tbody = document.getElementById("dataTableBody");
-  if (!tbody) return;
-
-  tbody.innerHTML = "";
-  const items = getVisibleItems();
-
-  items.forEach((item) => {
-    const tr = document.createElement("tr");
-    tr.dataset.itemId = String(item.id);
-
-    columns.forEach((col) => {
-      const td = document.createElement("td");
-      td.dataset.colKey = col.key;
-
-      if (col.editable) {
-        td.classList.add("cell-editable");
-        td.tabIndex = 0;
-      }
-
-      let contentNode;
-
-      if (col.key === "status") {
-        const span = document.createElement("span");
-        span.textContent = item.status || "";
-        const cls = getStatusBadgeClass(item.status);
-        span.className = `badge ${cls}`;
-        contentNode = span;
-      } else if (col.key === "priority") {
-        const span = document.createElement("span");
-        span.textContent = item.priority || "";
-        const cls = getPriorityBadgeClass(item.priority);
-        span.className = `badge ${cls}`;
-        contentNode = span;
-      } else if (col.key === "estimatedHours") {
-        contentNode = document.createTextNode(
-          item.estimatedHours != null ? String(item.estimatedHours) : ""
-        );
-
-      } else if (col.key === "task") {
-		  
-		
-        const wrapper = document.createElement("div");
-/*
-        const titleDiv = document.createElement("div");
-        titleDiv.className = "task-title";
-        titleDiv.textContent = item.task || "";
-
-        const descDiv = document.createElement("div");
-        descDiv.className = "task-desc";
-        if (item.description) {
-          descDiv.textContent = item.description;
-        } else {
-          descDiv.textContent = "Añadir descripción…";
-          descDiv.classList.add("task-desc--empty");
-        }
-        descDiv.addEventListener("click", () => openEditDescriptionModal(item));
-*/
-/*
-		// ----- DESCRIPCIÓN CON VISTA COMPACTA / EXPANDIDA -----
-		const descWrapper = document.createElement("div");
-		descWrapper.className = "task-desc-wrapper";
-
-		const descDiv = document.createElement("div");
-		descDiv.className = "task-desc task-desc-collapsed";
-
-		let hasDescription = !!item.description;
-		if (hasDescription) {
-		  descDiv.textContent = item.description;
-		} else {
-		  descDiv.textContent = "Añadir descripción…";
-		  descDiv.classList.add("task-desc--empty");
-		}
-
-		// Botón expandir/compactar
-		const toggleBtn = document.createElement("span");
-		toggleBtn.className = "desc-toggle-btn";
-
-		// Decidir si realmente necesitamos el botón
-		let needsToggle = false;
-		if (hasDescription) {
-		  const lines = item.description.split(/\r?\n/);
-		  needsToggle = lines.length > 3; // solo si hay más de 3 líneas
-		}
-
-		if (!hasDescription || !needsToggle) {
-		  // Sin descripción o solo pocas líneas → no mostramos el enlace
-		  toggleBtn.style.display = "none";
-		} else {
-		  toggleBtn.textContent = "Mostrar más";
-		}
-
-		// Click en la descripción → abre modal (salvo si el click es en el toggle)
-		descDiv.addEventListener("click", (e) => {
-		  if (e.target === toggleBtn) return;
-		  openEditDescriptionModal(item);
-		});
-
-		// Click en "Mostrar más / menos" → expandir/contraer SOLO la descripción
-		toggleBtn.addEventListener("click", (e) => {
-		  e.stopPropagation(); // que no dispare el modal
-		  const collapsed = descDiv.classList.contains("task-desc-collapsed");
-		  if (collapsed) {
-			descDiv.classList.remove("task-desc-collapsed");
-			toggleBtn.textContent = "Mostrar menos";
-		  } else {
-			descDiv.classList.add("task-desc-collapsed");
-			toggleBtn.textContent = "Mostrar más";
-		  }
-		});
-
-		// ORDEN CORRECTO: primero la descripción, luego el enlace
-		descWrapper.appendChild(descDiv);
-		descWrapper.appendChild(toggleBtn);
-
-		// Añadimos el bloque de descripción al wrapper de la tarea
-		wrapper.appendChild(descWrapper);
-		
-
-
-        // Botón para mostrar/ocultar comentarios
-        const commentsToggle = document.createElement("button");
-        commentsToggle.type = "button";
-        commentsToggle.className = "task-comments-toggle";
-        
-		// usar el número si ya lo tenemos, si no, mostrar (?)
-		const count = typeof item.commentCount === "number" ? item.commentCount : null;
-		commentsToggle.textContent = count !== null
-		  ? `💬 Comentarios (${count})`
-		  : "💬 Comentarios (?)";
-
-        commentsToggle.addEventListener("click", () =>
-          toggleCommentsForTask(item, wrapper)
-        );
-
-        // Contenedor donde se pintarán los comentarios
-        const commentsPanel = document.createElement("div");
-        commentsPanel.className = "comments-panel hidden";
-        commentsPanel.dataset.taskId = item.id;
-
-        wrapper.appendChild(titleDiv);
-        wrapper.appendChild(descDiv);
-        wrapper.appendChild(commentsToggle);
-        wrapper.appendChild(commentsPanel);
-        contentNode = wrapper;
-
-*/		
-
-		// ==== TÍTULO ====
-		const titleDiv = document.createElement("div");
-		titleDiv.className = "task-title";
-		titleDiv.textContent = item.task || "";
-
-		// ==== DESCRIPCIÓN (colapsable) ====
-		const descWrapper = document.createElement("div");
-		descWrapper.className = "task-desc-wrapper";
-
-		const descDiv = document.createElement("div");
-		descDiv.className = "task-desc task-desc-collapsed";
-
-		if (item.description) {
-		  descDiv.textContent = item.description;
-		} else {
-		  descDiv.textContent = "Añadir descripción…";
-		  descDiv.classList.add("task-desc--empty");
-		}
-
-		// ¿Cuántas líneas reales tiene la descripción?
-		let hasDescription = !!item.description;
-		let needsToggle = false;
-
-		if (hasDescription) {
-		  const lines = item.description.split(/\r?\n/);
-		  needsToggle = lines.length > 3;
-		}
-
-		// ==== BOTÓN MOSTRAR MÁS / MENOS ====
-		const toggleBtn = document.createElement("span");
-		toggleBtn.className = "desc-toggle-btn";
-
-		if (!hasDescription || !needsToggle) {
-		  toggleBtn.style.display = "none";
-		} else {
-		  toggleBtn.textContent = "Mostrar más";
-		}
-
-		descDiv.addEventListener("click", (e) => {
-		  if (e.target === toggleBtn) return;
-		  openEditDescriptionModal(item);
-		});
-
-		toggleBtn.addEventListener("click", (e) => {
-		  e.stopPropagation();
-		  const collapsed = descDiv.classList.contains("task-desc-collapsed");
-		  if (collapsed) {
-			descDiv.classList.remove("task-desc-collapsed");
-			toggleBtn.textContent = "Mostrar menos";
-		  } else {
-			descDiv.classList.add("task-desc-collapsed");
-			toggleBtn.textContent = "Mostrar más";
-		  }
-		});
-
-		// ORDEN CORRECTO:
-		descWrapper.appendChild(descDiv);
-		descWrapper.appendChild(toggleBtn);
-
-		wrapper.appendChild(titleDiv);       // primero título
-		wrapper.appendChild(descWrapper);    // luego descripción + botón
-		
-		
-		
-      } else {
-        contentNode = document.createTextNode(item[col.key] ?? "");
-      }
-
-
-      td.appendChild(contentNode);
-      tr.appendChild(td);
-    });
-
-
-    // Columna Acciones: botón "Nueva subtarea"
-    const tdActions = document.createElement("td");
-    tdActions.classList.add("actions-col");
-    const btnSub = document.createElement("button");
-    btnSub.type = "button";
-    btnSub.className = "btn btn-secondary btn-small";
-    btnSub.textContent = "➕";
-    btnSub.title = "Crear subtarea";
-    btnSub.addEventListener("click", () => {
-      openNewSubtaskModal(item);
-    });
-    tdActions.appendChild(btnSub);
-    tr.appendChild(tdActions);
-
-
-
-
-    tbody.appendChild(tr);
-  });
-
-  // Marcar celdas "dirty"
-  markDirtyCells();
-  updateHeaderSortIndicators();
-}
-
 
 async function toggleCommentsForTask(item, wrapper, toggleBtn) {
   const token = (selectors.asanaToken.value || "").trim();
@@ -2478,15 +2911,14 @@ function attachGlobalEvents() {
   });
 
   selectors.loadTasksBtn.addEventListener("click", loadTasksFromAsana);
-
-	// Cuando el usuario salga del campo token, cargar automáticamente los workspaces	
-	selectors.asanaToken.addEventListener("blur", () => {	  
-		const token = (selectors.asanaToken.value || "").trim();	  
-		if (token) {		
-			loadWorkspaces();	  
-		}	
-	});	
-
+  
+	// Cuando el usuario salga del campo token, cargar automáticamente los workspaces
+	selectors.asanaToken.addEventListener("blur", () => {
+	  const token = (selectors.asanaToken.value || "").trim();
+	  if (token) {
+		loadWorkspaces();
+	  }
+	});
 
   // Contraseña de cifrado: al cambiar, reintenta desencriptar los nombres
   selectors.cryptoPassword.addEventListener("change", async () => {
@@ -2529,6 +2961,7 @@ function attachGlobalEvents() {
   selectors.createSubtaskBtn.addEventListener("click", createSubtask);
   
   selectors.saveDescriptionBtn.addEventListener("click", saveDescriptionFromModal);
+  selectors.saveTaskDetailsBtn.addEventListener("click", saveEditTaskDetails);
 
   // Cerrar modales al pulsar en botones con data-close-modal
   document.body.addEventListener("click", (evt) => {
@@ -2936,9 +3369,80 @@ function toggleTheme() {
   body.classList.toggle("theme-light", isDark);
 }
 
-
-
 function applyColumnVisibility() {
+  // TH: fila títulos
+  const headerTHs = document.querySelectorAll("thead tr:first-child th[data-col-key]");
+  // TH: fila filtros
+  const filterTHs = document.querySelectorAll("thead tr.table-filters-row th[data-col-key]");
+  // TD: filas del cuerpo
+  const tds = document.querySelectorAll("tbody td[data-col-key]");
+
+  Object.keys(columnVisibility).forEach((colKey) => {
+    const visible = columnVisibility[colKey] !== false;
+
+    headerTHs.forEach((th) => {
+      if (th.dataset.colKey === colKey) {
+        th.style.display = visible ? "" : "none";
+      }
+    });
+
+    filterTHs.forEach((th) => {
+      if (th.dataset.colKey === colKey) {
+        th.style.display = visible ? "" : "none";
+      }
+    });
+
+    tds.forEach((td) => {
+      if (td.dataset.colKey === colKey) {
+        td.style.display = visible ? "" : "none";
+      }
+    });
+  });
+}
+
+
+function applyColumnVisibility_oldold() {
+  // 1. Cabecera principal (primer TH)
+  const headerTHs = document.querySelectorAll("thead tr:first-child th[data-col-key]");
+
+  // 2. Fila de filtros
+  const filterTHs = document.querySelectorAll("thead tr.table-filters-row th[data-col-key]");
+
+  // 3. Celdas del cuerpo
+  const tds = document.querySelectorAll("tbody td[data-col-key]");
+
+  // Para cada columna del sistema
+  Object.keys(columnVisibility).forEach((colKey) => {
+    const visible = columnVisibility[colKey] !== false;
+
+    // Ocultar/mostrar título principal
+    headerTHs.forEach(th => {
+      if (th.dataset.colKey === colKey) {
+        th.style.display = visible ? "" : "none";
+      }
+    });
+
+    // Ocultar/mostrar filtro de columna
+    filterTHs.forEach(th => {
+      if (th.dataset.colKey === colKey) {
+        th.style.display = visible ? "" : "none";
+      }
+    });
+
+    // Ocultar/mostrar celdas
+    tds.forEach(td => {
+      if (td.dataset.colKey === colKey) {
+        td.style.display = visible ? "" : "none";
+      }
+    });
+	
+	// incluir columna "actions" como visible siempre
+	if (colKey === "actions") return;
+	
+  });
+}
+
+function applyColumnVisibility_old() {
   const ths = document.querySelectorAll("th[data-col-key]");
   const tds = document.querySelectorAll("td[data-col-key]");
 
@@ -3030,6 +3534,3 @@ async function saveChangesToAsana() {
    ================================ */
 
 document.addEventListener("DOMContentLoaded", init);
-
-
-
