@@ -780,7 +780,53 @@ async function handleFileUpload(item, file, panel) {
 /**
  * Carga lista de workspaces en el select correspondiente
  */
-async function loadWorkspaces() {
+
+async function loadWorkspaces() {  
+	const token = (selectors.asanaToken.value || "").trim();  
+	if (!token) {    
+		announce("Por favor, introduce tu token primero.");    
+		return;  
+	}  
+	try {    
+		selectors.statsBar.textContent = "Cargando workspaces...";    
+		const result = await asanaGet("/workspaces", token);    
+		const workspaces = result.data || [];    
+		
+		const sel = selectors.asanaWorkspace;    
+		sel.innerHTML = '<option value="">Selecciona workspace…</option>';    
+		
+		workspaces.forEach((ws) => {      
+			const opt = document.createElement("option");      
+			opt.value = ws.gid;      
+			opt.textContent = ws.name;      
+			sel.appendChild(opt);    
+		});    
+		
+		if (workspaces.length === 0) {      
+			selectors.statsBar.textContent =        
+				"No se encontraron workspaces para este token.";      
+			return;    
+		}    
+		// ✅ Si solo hay un workspace, lo seleccionamos y cargamos sus proyectos    
+		if (workspaces.length === 1) {      
+			sel.value = workspaces[0].gid;      
+			selectors.statsBar.textContent = `Workspace seleccionado automáticamente: ${workspaces[0].name}. Cargando proyectos…`;      
+			await loadProjects(workspaces[0].gid);    
+		} else {      
+			selectors.statsBar.textContent = `Workspaces cargados (${workspaces.length}). Selecciona uno para ver sus proyectos.`;    
+		}    
+		
+		announce("Workspaces cargados correctamente.");  
+	} catch (err) {    
+		console.error(err);    
+		selectors.statsBar.textContent = `Error al cargar workspaces: ${err.message}`;    
+		announce("Error al cargar workspaces de Asana.");  
+	}
+}
+
+
+
+async function loadWorkspaces_old() {
   const token = (selectors.asanaToken.value || "").trim();
   if (!token) {
     announce("Introduce tu token de Asana para cargar los workspaces.");
@@ -2432,7 +2478,14 @@ function attachGlobalEvents() {
   });
 
   selectors.loadTasksBtn.addEventListener("click", loadTasksFromAsana);
-  
+
+	// Cuando el usuario salga del campo token, cargar automáticamente los workspaces	
+	selectors.asanaToken.addEventListener("blur", () => {	  
+		const token = (selectors.asanaToken.value || "").trim();	  
+		if (token) {		
+			loadWorkspaces();	  
+		}	
+	});	
 
 
   // Contraseña de cifrado: al cambiar, reintenta desencriptar los nombres
@@ -2977,5 +3030,6 @@ async function saveChangesToAsana() {
    ================================ */
 
 document.addEventListener("DOMContentLoaded", init);
+
 
 
