@@ -507,3 +507,51 @@ button {
   margin-bottom: 24px;
 }
 
+
+/* ===========================================
+   FIX: barra de búsqueda sin scroll horizontal
+=========================================== */
+.search-bar {
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.search-bar input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: block;
+}
+
+body, html {
+  overflow-x: hidden !important;
+}
+
+/* =============================
+   Filtro de estado en buscador
+============================= */
+.search-row {
+  width: 100%;
+  display: flex;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.status-filter select {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  box-sizing: border-box;
+}
+
+/* Evitar scroll horizontal */
+.search-bar {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+
