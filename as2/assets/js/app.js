@@ -217,19 +217,33 @@ function attachEvents() {
     }
   });
 
-  // Subir adjunto
-  dom.attachmentInput.addEventListener("change", async () => {
-    const file = dom.attachmentInput.files[0];
-    if (!file || !currentDetailTaskId) return;
-    try {
-      await uploadAttachment(currentDetailTaskId, file);
-      dom.attachmentInput.value = "";
-      await loadAttachments(currentDetailTaskId);
-    } catch (err) {
-      console.error(err);
-      alert("No se pudo subir el archivo.");
-    }
-  });
+  
+	// Subir adjunto
+	dom.attachmentInput.addEventListener("change", async () => {
+	  const file = dom.attachmentInput.files[0];
+	  if (!file || !currentDetailTaskId) return;
+
+	  // 1) Intentamos subir el archivo
+	  try {
+		await uploadAttachment(currentDetailTaskId, file);
+	  } catch (err) {
+		console.error("Error real al subir el archivo:", err);
+		alert("No se pudo subir el archivo.");
+		return; // si la subida falla, no intentamos recargar la lista
+	  }
+
+	  // 2) Si la subida fue bien, limpiamos el input
+	  dom.attachmentInput.value = "";
+
+	  // 3) Intentamos recargar la lista de adjuntos; si falla, ya NO mostramos el mensaje de subida
+	  try {
+		await loadAttachments(currentDetailTaskId);
+	  } catch (err) {
+		console.error("El archivo se ha subido, pero hubo un problema al actualizar la lista de adjuntos:", err);
+		// opcional: podrías mostrar un mensaje suave tipo "Recarga la página para ver la lista actualizada"
+	  }
+	});
+
 
   updateFabAppearance();
 }
