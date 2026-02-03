@@ -19,6 +19,9 @@ let currentProjectName = "";
 let currentSelectedTaskId = null;
 let currentDetailTaskId = null;
 
+
+let statusFilterValue = "all";
+
 // Referencias DOM
 const dom = {};
 
@@ -120,6 +123,7 @@ function hideLoader() {
 
 function attachEvents() {
 	
+	
 	// Guardar descripción
 	dom.saveDescriptionBtn.addEventListener("click", async () => {
 	  if (!currentDetailTaskId) return;
@@ -139,6 +143,16 @@ function attachEvents() {
     }
   });
 
+
+  // Filtro por estado
+  dom.statusFilter = document.getElementById("statusFilter");
+  dom.statusFilter.addEventListener("change", () => {
+    statusFilterValue = dom.statusFilter.value;
+    renderTaskList(); // volver a pintar según estado seleccionado
+  });
+
+
+
   // Mostrar/ocultar panel de config Asana
   dom.openConfigBtn.addEventListener("click", () => {
     const hidden = dom.asanaConfigPanel.classList.toggle("hidden");
@@ -148,6 +162,26 @@ function attachEvents() {
       }
     }
   });
+
+
+  // Cuando salimos del campo Token, precargamos workspaces/proyectos (pero NO tareas)
+  dom.asanaToken.addEventListener("blur", async () => {
+    const tokenVal = dom.asanaToken.value.trim();
+    if (!tokenVal) return;
+    try {
+      showLoader("Cargando workspaces...");
+      await loadWorkspaces(); // esto solo carga proyectos si hay un único workspace
+    } catch (err) {
+      console.error("Error al precargar workspaces:", err);
+      alert("No se pudieron cargar los workspaces. Revisa el token.");
+    } finally {
+      hideLoader();
+    }
+  });
+
+
+
+
 
   // Buscar en tiempo real
   dom.globalFilter.addEventListener("input", () => {
@@ -166,6 +200,51 @@ function attachEvents() {
   // Botón "Cargar tareas"
   dom.loadTasksBtn.addEventListener("click", async () => {
     syncCryptoPassword(); // aseguramos contraseña antes de cargar
+	
+
+	  // Si todavía no tenemos workspaces/proyectos, los cargamos primero
+	  if (!dom.asanaWorkspace.options.length) {
+		try {
+		  showLoader("Cargando workspaces...");
+		  await loadWorkspaces();
+		} catch (err) {
+		  console.error("Error al cargar workspaces:", err);
+		  alert("No se pudieron cargar los workspaces. Revisa el token.");
+		} finally {
+		  hideLoader();
+		}
+
+		// Si tras cargar hay más de un workspace, pedimos que elija y vuelva a pulsar
+		if (dom.asanaWorkspace.options.length > 1 && !dom.asanaWorkspace.value) {
+		  alert("Selecciona un workspace y luego un proyecto, después vuelve a pulsar 'Cargar tareas'.");
+		  return;
+		}
+	  }
+
+	  // Si no hay proyectos cargados, intentamos cargar los del workspace seleccionado y pedimos al usuario que elija
+	  if (!dom.asanaProject.options.length) {
+		if (!dom.asanaWorkspace.value) {
+		  alert("Selecciona un workspace primero.");
+		  return;
+		}
+		try {
+		  showLoader("Cargando proyectos...");
+		  currentWorkspaceId = dom.asanaWorkspace.value;
+		  await loadProjects();
+		} catch (err) {
+		  console.error("Error al cargar proyectos:", err);
+		  alert("No se pudieron cargar los proyectos para ese workspace.");
+		} finally {
+		  hideLoader();
+		}
+
+		// Después de cargar proyectos, dejamos que el usuario elija cuál y vuelva a pulsar
+		return;
+	  }
+
+	  // A partir de aquí, ya tenemos workspace + proyecto → ahora sí cargamos TAREAS
+	
+	
 	showLoader("Cargando tareas...");
     try {
       await handleLoadTasks();
@@ -275,11 +354,17 @@ async function loadWorkspaces() {
     dom.asanaWorkspace.appendChild(opt);
   });
 
-  if (workspaces.length) {
+
+  if (workspaces.length === 1) {
+    // Si solo hay un workspace, lo seleccionamos y cargamos sus proyectos
     currentWorkspaceId = workspaces[0].gid;
     dom.asanaWorkspace.value = currentWorkspaceId;
     await loadProjects();
+  } else {
+    // Si hay varios, dejamos que el usuario elija; los proyectos se cargarán al cambiar el select
+    currentWorkspaceId = null;
   }
+
 }
 
 async function loadProjects() {
@@ -319,11 +404,11 @@ async function loadProjects() {
 
 async function handleLoadTasks() {
   const token = getTokenOrThrow();
-
+/*
   if (!dom.asanaWorkspace.options.length) {
     await loadWorkspaces();
   }
-
+*/
   currentWorkspaceId = dom.asanaWorkspace.value || currentWorkspaceId;
   currentProjectId = dom.asanaProject.value || currentProjectId;
 
@@ -476,7 +561,16 @@ async function decryptTaskNames(items) {
 ============================= */
 
 function renderTaskList() {
-  const items = getVisibleItems();
+  
+  let items = getVisibleItems();
+
+  // aplicar filtro por estado
+  if (statusFilterValue === "pending") {
+    items = items.filter(i => !i.completed && i.status !== "Completada");
+  } else if (statusFilterValue === "completed") {
+    items = items.filter(i => i.completed || i.status === "Completada");
+  }
+
   dom.taskList.innerHTML = "";
 
   items.forEach((item) => {
