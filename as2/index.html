@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Asana Mobile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <!-- CSS móvil (se completará en siguiente iteración) -->
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <!-- ==========================
+       HEADER MÓVIL ESTILO ASANA
+       ========================== -->
+  <header class="mobile-header">
+    <div class="header-left">
+      <h1 class="header-title">Mis Tareas</h1>
+      <span class="header-subtitle" id="projectNameLabel">Proyecto seleccionado</span>
+    </div>
+
+    <div class="header-actions">
+      <button id="openSearchBtn" class="icon-btn">🔍</button>
+      <button id="openConfigBtn" class="icon-btn">⚙️</button>
+    </div>
+  </header>
+
+
+  <!-- ==========================
+       BARRA DE BÚSQUEDA
+       ========================== -->
+  <section id="searchBar" class="search-bar hidden">
+    <input id="globalFilter" type="text" placeholder="Buscar..." />
+  </section>
+
+
+  <!-- ==========================
+       PANEL DE CONFIGURACIÓN ASANA
+       ========================== -->
+  <section id="asanaConfigPanel" class="config-panel hidden">
+
+    <h3>Configurar conexión Asana</h3>
+
+    <label class="cfg-field">
+      <span>Token Asana</span>
+      <input type="password" id="asanaToken" placeholder="1/xxxxx">
+    </label>
+
+    <label class="cfg-field">
+      <span>Workspace</span>
+      <select id="asanaWorkspace"></select>
+    </label>
+
+    <label class="cfg-field">
+      <span>Proyecto</span>
+      <select id="asanaProject"></select>
+    </label>
+
+    <label class="cfg-field">
+      <span>Contraseña cifrado (opcional)</span>
+      <input type="password" id="cryptoPassword" placeholder="••••••••">
+    </label>
+
+    <button id="loadTasksBtn" class="btn-primary">Cargar tareas</button>
+  </section>
+
+
+  <!-- ==========================
+       LISTA DE TAREAS (ESTILO ASANA)
+       ========================== -->
+  <main id="taskList" class="task-list">
+    <!--
+      Se rellenará dinámicamente desde app.js.
+      Formato esperado:
+
+      <div class="section-separator">Milestones</div>
+
+      <div class="task-item" data-task-id="123">
+        <div class="task-checkbox"></div>
+        <div class="task-content">
+          <div class="task-title">Campaign brief...</div>
+          <div class="task-subtext">Due today · 2 comments</div>
+        </div>
+      </div>
+
+      <div class="task-item subtask" data-task-id="456">...</div>
+    -->
+  </main>
+
+
+  <!-- ==========================
+       FAB (NUEVA TAREA / EDITAR)
+       ========================== -->
+  <button id="fabMain" class="fab">＋</button>
+
+
+  <!-- ==========================
+       MODAL DETALLES (FULLSCREEN)
+       ========================== -->
+  <div id="detailsModal" class="modal hidden">
+    <div class="modal-content">
+
+      <header class="modal-header">
+        <button id="closeDetailsBtn" class="icon-btn">✕</button>
+        <h3 id="detailTitle" class="modal-title"></h3>
+      </header>
+
+      <div class="modal-body">
+
+        <!-- Tags -->
+        <div id="detailTags" class="tags-area"></div>
+
+        <!-- Descripción -->
+        <section class="detail-section">
+          <h4>Descripción</h4>
+          
+          <!-- Campo editable para la descripción -->
+          <textarea
+            id="detailDescription"
+            class="detail-description-input"
+            rows="4"
+            placeholder="Añadir o editar la descripción..."
+          ></textarea>
+          <button id="saveDescriptionBtn" class="btn-primary" type="button">
+            Guardar descripción
+          </button>
+
+        </section>
+
+        <!-- Comentarios -->
+        <section class="detail-section">
+          <h4>Comentarios</h4>
+          <div id="commentsList" class="comments-list"></div>
+
+          <form id="commentForm" class="comment-form">
+            <textarea id="commentInput" placeholder="Añadir comentario..."></textarea>
+            <button class="btn-primary" type="submit">Enviar</button>
+          </form>
+        </section>
+
+        <!-- Adjuntos -->
+        <section class="detail-section">
+          <h4>Adjuntos</h4>
+          <div id="attachmentsList" class="attachments-list"></div>
+
+          <label class="file-upload">
+            Añadir archivo
+            <input id="attachmentInput" type="file" accept="image/*,application/pdf">
+          </label>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+
+  <!-- Script principal como ES Module: app.js importará store.js y crypto-utils.js -->
+  <script type="module" src="assets/js/app.js"></script>
+
+
+  <!-- LOADER GLOBAL -->
+  <div id="globalLoader" class="loader-overlay hidden">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Cargando...</div>
+  </div>
+
+</body>
+</html>

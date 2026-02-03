@@ -1,0 +1,445 @@
+/*
+========================================================
+ ASANA MOBILE – MODO CLARO
+ Interfaz móvil minimalista inspirada en la app oficial.
+========================================================
+*/
+
+/* TIPOGRAFÍA Y VARIABLES */
+:root {
+  --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --color-bg: #ffffff;
+  --color-surface: #fafafa;
+  --color-text: #222;
+  --color-subtext: #777;
+  --color-border: #e5e5e5;
+  --color-accent: #2563eb;
+  --color-accent-light: #dbeafe;
+  --color-danger: #e53935;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+
+  --indent-0: 0px;
+  --indent-1: 18px;     /* EXACTO estilo Asana */
+  --indent-2: 36px;
+  --indent-3: 54px;
+  --indent-4: 72px;     /* por si acaso */
+}
+
+/* RESET BÁSICO */
+body, h1, h2, h3, h4, p, button {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg);
+  font-family: var(--font-main);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+
+/* ==========================================
+   HEADER MÓVIL
+========================================== */
+.mobile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.header-subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-subtext);
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-btn {
+  font-size: 1.3rem;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--color-text);
+}
+
+
+/* ==========================================
+   BÚSQUEDA GLOBAL
+========================================== */
+.search-bar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+
+/* ==========================================
+   PANEL DE CONFIGURACIÓN
+========================================== */
+.config-panel {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.config-panel h3 {
+  margin-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.cfg-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.cfg-field input,
+.cfg-field select {
+  margin-top: 4px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  width: 100%;
+}
+
+
+/* ==========================================
+   LISTA DE TAREAS (ESTILO ASANA)
+========================================== */
+.task-list {
+  padding: 10px 0;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.task-item.selected {
+  background: var(--color-accent-light);
+}
+
+.task-checkbox {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.task-checkbox.checked {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.task-checkbox.checked::after {
+  content: "✔";
+  position: absolute;
+  top: -2px;
+  left: 4px;
+  font-size: 0.85rem;
+  color: white;
+}
+
+.task-content {
+  flex: 1 1 auto;
+}
+
+.task-title {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.task-title.completed {
+  color: var(--color-subtext);
+  text-decoration: line-through;
+}
+
+.task-subtext {
+  color: var(--color-subtext);
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+/* INDENTACIÓN EXACTA ASANA */
+.depth-0  { padding-left: var(--indent-0); }
+.depth-1  { padding-left: var(--indent-1); }
+.depth-2  { padding-left: var(--indent-2); }
+.depth-3  { padding-left: var(--indent-3); }
+.depth-4  { padding-left: var(--indent-4); }
+
+
+/* ==========================================
+   MODAL DE DETALLES (FULLSCREEN)
+========================================== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 300;
+}
+
+.modal-content {
+  background: #fff;
+  width: 100%;
+  max-height: 92vh;
+  border-radius: 16px 16px 0 0;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.detail-section {
+  margin-top: 16px;
+}
+
+.detail-section h4 {
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.detail-section p {
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.tags-area {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.tag-chip {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.comments-list {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  background: #fff;
+}
+
+.comment-item {
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.comment-text {
+  color: var(--color-text);
+  white-space: pre-line;
+}
+
+.comment-form textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
+}
+
+.attachments-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+
+/* ==========================================
+   FILE UPLOAD
+========================================== */
+.file-upload {
+  margin-top: 10px;
+  display: block;
+  padding: 10px;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-subtext);
+  font-size: 0.9rem;
+}
+
+.file-upload input {
+  display: none;
+}
+
+
+/* ==========================================
+   FAB (Floating Action Button)
+========================================== */
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 200;
+}
+
+.fab.edit-mode {
+  background: var(--color-success);
+}
+
+
+/* =============================
+   LOADER GLOBAL (overlay)
+============================= */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loader-overlay.hidden {
+  display: none !important;
+}
+
+.loader-spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid #cbd5e1;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+.loader-text {
+  margin-top: 12px;
+  font-size: 1rem;
+  color: #333;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =============================
+   DESCRIPCIÓN (textarea)
+============================= */
+.detail-description-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  font-size: 1rem;
+  line-height: 1.4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.detail-section textarea:focus {
+  outline: 2px solid var(--color-accent);
+  border-color: var(--color-accent);
+}
