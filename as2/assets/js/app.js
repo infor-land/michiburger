@@ -965,12 +965,14 @@ async function uploadAttachment(taskId, file) {
 async function downloadAttachmentDecrypted(att) {
   showLoader("Descargando...");	
   const token = getTokenOrThrow();
-
+  /*
   const res = await fetch(att.download_url, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   });
+  */
+  const res = await fetch(att.download_url);
   if (!res.ok) {
     const t = await res.text();
     console.error("Error al descargar adjunto:", t || res.status);
