@@ -223,24 +223,24 @@ function attachEvents() {
 	  const file = dom.attachmentInput.files[0];
 	  if (!file || !currentDetailTaskId) return;
 
-	  // 1) Intentamos subir el archivo
-	  try {
-		await uploadAttachment(currentDetailTaskId, file);
-	  } catch (err) {
-		console.error("Error real al subir el archivo:", err);
+	  // 1) Subimos el archivo (uploadAttachment devuelve true/false)
+	  const ok = await uploadAttachment(currentDetailTaskId, file);
+	  if (!ok) {
 		alert("No se pudo subir el archivo.");
-		return; // si la subida falla, no intentamos recargar la lista
+		return;
 	  }
 
 	  // 2) Si la subida fue bien, limpiamos el input
 	  dom.attachmentInput.value = "";
 
-	  // 3) Intentamos recargar la lista de adjuntos; si falla, ya NO mostramos el mensaje de subida
+	  // 3) Recargamos la lista de adjuntos (si esto falla, no mostramos error de subida)
 	  try {
 		await loadAttachments(currentDetailTaskId);
 	  } catch (err) {
-		console.error("El archivo se ha subido, pero hubo un problema al actualizar la lista de adjuntos:", err);
-		// opcional: podrías mostrar un mensaje suave tipo "Recarga la página para ver la lista actualizada"
+		console.error(
+		  "El archivo se ha subido, pero hubo un problema al actualizar la lista de adjuntos:",
+		  err
+		);
 	  }
 	});
 
@@ -920,7 +920,71 @@ async function loadAttachments(taskId) {
   }
 }
 
+
 async function uploadAttachment(taskId, file) {
+  const token = getTokenOrThrow();
+  const formData = new FormData();
+
+  try {
+    if (cryptoManager.masterPassword) {
+      // --- SUBIDA CIFRADA ---
+      const arrayBuffer = await file.arrayBuffer();
+      const dataB64 = arrayBufferToBase64(arrayBuffer);
+
+      const payload = {
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+        dataB64
+      };
+
+      const payloadStr = JSON.stringify(payload);
+
+      // Ciframos el contenido (payload completo)
+      const encryptedPayload = await cryptoManager.encrypt(payloadStr);
+
+      // Ciframos también el nombre
+      const encryptedName = await cryptoManager.encrypt(file.name);
+
+      const encryptedBlob = new Blob([encryptedPayload], {
+        type: "application/octet-stream"
+      });
+
+      formData.append("file", encryptedBlob, encryptedName);
+    } else {
+      // Sin contraseña → adjunto en claro
+      formData.append("file", file);
+    }
+  } catch (err) {
+    console.error("Error preparando el adjunto para cifrado/subida:", err);
+    return false; // no intentamos ni siquiera hacer fetch
+  }
+
+  try {
+    const res = await fetch(`${ASANA_API_BASE}/tasks/${taskId}/attachments`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const t = await res.text();
+      console.error("Error HTTP al subir adjunto:", t || res.status);
+      return false;
+    }
+
+    // Si todo va bien
+    return true;
+  } catch (err) {
+    console.error("Error de red al subir adjunto:", err);
+    return false;
+  }
+}
+
+
+
+async function uploadAttachment_old(taskId, file) {
   showLoader("Subiendo archivo...");	
   const token = getTokenOrThrow();
   const formData = new FormData();
