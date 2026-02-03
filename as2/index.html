@@ -29,9 +29,20 @@
   <!-- ==========================
        BARRA DE BÚSQUEDA
        ========================== -->
-  <section id="searchBar" class="search-bar hidden">
-    <input id="globalFilter" type="text" placeholder="Buscar..." />
-  </section>
+	<section id="searchBar" class="search-bar hidden">
+	  <div class="search-row">
+		<input id="globalFilter" type="text" placeholder="Buscar..." />
+	  </div>
+
+	  <!-- NUEVO: Filtro por estado -->
+	  <div class="search-row status-filter">
+		<select id="statusFilter">
+		  <option value="all">Todas</option>
+		  <option value="pending">Pendientes</option>
+		  <option value="completed">Completadas</option>
+		</select>
+	  </div>
+	</section>
 
 
   <!-- ==========================
