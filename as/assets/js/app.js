@@ -14,8 +14,6 @@ import {
   updateItemField,
   revertAllChanges,
   saveChanges,
-  STATUS_VALUES,
-  PRIORITY_VALUES,
   getDirtyItems,
   markAsSaved,      // 👈 IMPORTANTE
   STATUS_VALUES,
@@ -3630,3 +3628,4 @@ async function saveChangesToAsana_oldold() {
    ================================ */
 
 document.addEventListener("DOMContentLoaded", init);
+
